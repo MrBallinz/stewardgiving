@@ -118,6 +118,20 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
   }
+  /* Legal pages */
+  .legal-prose { @apply text-foreground/90 leading-relaxed; }
+  .legal-prose h2 { @apply font-serif text-2xl font-semibold mt-12 mb-3 scroll-mt-24; }
+  .legal-prose h3 { @apply font-serif text-lg font-semibold mt-8 mb-2; }
+  .legal-prose p  { @apply my-3 text-[15px] text-foreground/85; }
+  .legal-prose ul { @apply my-3 ml-5 list-disc space-y-1.5 text-[15px] text-foreground/85; }
+  .legal-prose ol { @apply my-3 ml-5 list-decimal space-y-1.5 text-[15px] text-foreground/85; }
+  .legal-prose a  { @apply text-primary underline underline-offset-2 hover:opacity-80; }
+  .legal-prose strong { @apply text-foreground font-semibold; }
+  .legal-prose blockquote { @apply border-l-2 border-primary/40 pl-4 italic text-muted-foreground my-4; }
+  .legal-prose hr { @apply my-10 border-border/60; }
+  .legal-prose table { @apply w-full text-sm my-4 border border-border rounded-md overflow-hidden; }
+  .legal-prose th { @apply text-left bg-secondary/60 px-3 py-2 font-medium border-b border-border; }
+  .legal-prose td { @apply px-3 py-2 border-b border-border/60 align-top; }
 }
 
 /* Print: clean year-end report */
