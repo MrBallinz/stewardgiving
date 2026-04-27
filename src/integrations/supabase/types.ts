@@ -14,7 +14,213 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bank_connections: {
+        Row: {
+          account_mask: string | null
+          created_at: string
+          id: string
+          institution_name: string
+          plaid_item_id: string | null
+          user_id: string
+        }
+        Insert: {
+          account_mask?: string | null
+          created_at?: string
+          id?: string
+          institution_name: string
+          plaid_item_id?: string | null
+          user_id: string
+        }
+        Update: {
+          account_mask?: string | null
+          created_at?: string
+          id?: string
+          institution_name?: string
+          plaid_item_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      giving_covenants: {
+        Row: {
+          auto_transfer: boolean
+          created_at: string
+          id: string
+          minimum_monthly: number
+          percent_of_profit: number
+          scripture_anchor: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_transfer?: boolean
+          created_at?: string
+          id?: string
+          minimum_monthly?: number
+          percent_of_profit?: number
+          scripture_anchor?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_transfer?: boolean
+          created_at?: string
+          id?: string
+          minimum_monthly?: number
+          percent_of_profit?: number
+          scripture_anchor?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      giving_recipients: {
+        Row: {
+          allocation_percent: number
+          created_at: string
+          ein: string | null
+          id: string
+          name: string
+          type: Database["public"]["Enums"]["recipient_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allocation_percent?: number
+          created_at?: string
+          ein?: string | null
+          id?: string
+          name: string
+          type?: Database["public"]["Enums"]["recipient_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allocation_percent?: number
+          created_at?: string
+          ein?: string | null
+          id?: string
+          name?: string
+          type?: Database["public"]["Enums"]["recipient_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      giving_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          monthly_summary_id: string
+          recipient_id: string
+          status: Database["public"]["Enums"]["transaction_status"]
+          transferred_at: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          monthly_summary_id: string
+          recipient_id: string
+          status?: Database["public"]["Enums"]["transaction_status"]
+          transferred_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          monthly_summary_id?: string
+          recipient_id?: string
+          status?: Database["public"]["Enums"]["transaction_status"]
+          transferred_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "giving_transactions_monthly_summary_id_fkey"
+            columns: ["monthly_summary_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_summaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "giving_transactions_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "giving_recipients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_summaries: {
+        Row: {
+          created_at: string
+          giving_amount: number
+          giving_percent: number
+          id: string
+          month: string
+          net_profit: number
+          status: Database["public"]["Enums"]["summary_status"]
+          total_expenses: number
+          total_revenue: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          giving_amount?: number
+          giving_percent?: number
+          id?: string
+          month: string
+          net_profit?: number
+          status?: Database["public"]["Enums"]["summary_status"]
+          total_expenses?: number
+          total_revenue?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          giving_amount?: number
+          giving_percent?: number
+          id?: string
+          month?: string
+          net_profit?: number
+          status?: Database["public"]["Enums"]["summary_status"]
+          total_expenses?: number
+          total_revenue?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          business_name: string | null
+          business_type: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          onboarded: boolean
+          updated_at: string
+        }
+        Insert: {
+          business_name?: string | null
+          business_type?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          onboarded?: boolean
+          updated_at?: string
+        }
+        Update: {
+          business_name?: string | null
+          business_type?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          onboarded?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +229,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      recipient_type: "church" | "missions" | "nonprofit" | "other"
+      summary_status: "pending" | "transferred" | "skipped"
+      transaction_status: "pending" | "completed" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +358,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      recipient_type: ["church", "missions", "nonprofit", "other"],
+      summary_status: ["pending", "transferred", "skipped"],
+      transaction_status: ["pending", "completed", "failed"],
+    },
   },
 } as const
