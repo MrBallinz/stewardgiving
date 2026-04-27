@@ -120,8 +120,8 @@ const Landing = () => {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="ghost" asChild className="h-12 px-6 text-base">
-                <a href="#features">See how it works</a>
+              <Button size="lg" variant="outline" asChild className="h-12 px-6 text-base">
+                <Link to="/demo">Watch the demo</Link>
               </Button>
             </div>
             <p className="mt-8 text-sm text-muted-foreground/80 animate-fade-up [animation-delay:320ms] opacity-0">
