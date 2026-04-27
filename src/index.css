@@ -119,3 +119,11 @@
     letter-spacing: -0.02em;
   }
 }
+
+/* Print: clean year-end report */
+@media print {
+  body { background: white; }
+  header, nav, footer, .print\:hidden { display: none !important; }
+  main { padding: 0 !important; }
+  .container { max-width: none !important; padding: 0 !important; }
+}

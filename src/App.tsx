@@ -7,7 +7,10 @@ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
-import Placeholder from "./pages/Placeholder";
+import Recipients from "./pages/Recipients";
+import Covenant from "./pages/Covenant";
+import Report from "./pages/Report";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { RequireAuth } from "./components/RequireAuth";
 
@@ -24,10 +27,10 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/recipients" element={<RequireAuth><Placeholder title="Recipients" blurb="Manage who receives your giving and how it's split." /></RequireAuth>} />
-          <Route path="/covenant" element={<RequireAuth><Placeholder title="Your covenant" blurb="Edit your giving rule, minimum, and scripture anchor." /></RequireAuth>} />
-          <Route path="/report" element={<RequireAuth><Placeholder title="Year-end report" blurb="A printable, tax-ready record of your stewardship." /></RequireAuth>} />
-          <Route path="/settings" element={<RequireAuth><Placeholder title="Settings" blurb="Profile, business info, and account." /></RequireAuth>} />
+          <Route path="/recipients" element={<RequireAuth><Recipients /></RequireAuth>} />
+          <Route path="/covenant" element={<RequireAuth><Covenant /></RequireAuth>} />
+          <Route path="/report" element={<RequireAuth><Report /></RequireAuth>} />
+          <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
