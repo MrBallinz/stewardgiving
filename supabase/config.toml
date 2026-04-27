@@ -1,1 +1,4 @@
 project_id = "ilbyouqfvcjhpnhyetkz"
+
+[functions.faith-chat]
+verify_jwt = false

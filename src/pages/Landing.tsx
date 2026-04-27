@@ -327,6 +327,7 @@ const Landing = () => {
             <p className="text-sm font-medium mb-3">Company</p>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/faith" className="hover:text-foreground">Statement of faith</Link></li>
+              <li><Link to="/faq" className="hover:text-foreground">FAQ</Link></li>
               <li><a href="#" className="hover:text-foreground">Contact</a></li>
             </ul>
           </div>
