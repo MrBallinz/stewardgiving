@@ -49,7 +49,7 @@ const Auth = () => {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
     setBusy(false);
     if (error) toast({ title: "Couldn't sign in", description: error.message, variant: "destructive" });
   };
