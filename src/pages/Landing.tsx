@@ -74,7 +74,7 @@ const Landing = () => {
             <a href="#features" className="hover:text-foreground transition">Features</a>
             <a href="#mobile" className="hover:text-foreground transition">Mobile app</a>
             <a href="#pricing" className="hover:text-foreground transition">Pricing</a>
-            <a href="#faith" className="hover:text-foreground transition">Our statement</a>
+            <Link to="/faith" className="hover:text-foreground transition">Our statement</Link>
           </nav>
           <div className="flex items-center gap-2">
             <Button variant="ghost" asChild size="sm">
@@ -305,7 +305,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer id="faith" className="border-t border-border/60 bg-card/30">
+      <footer className="border-t border-border/60 bg-card/30">
         <div className="container py-12 grid md:grid-cols-4 gap-8">
           <div>
             <Link to="/" className="flex items-center gap-2 mb-3">
@@ -326,7 +326,7 @@ const Landing = () => {
           <div>
             <p className="text-sm font-medium mb-3">Company</p>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground">Statement of faith</a></li>
+              <li><Link to="/faith" className="hover:text-foreground">Statement of faith</Link></li>
               <li><a href="#" className="hover:text-foreground">Contact</a></li>
             </ul>
           </div>
