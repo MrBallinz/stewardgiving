@@ -40,6 +40,10 @@ const App = () => (
           <Route path="/covenant" element={<RequireAuth><Covenant /></RequireAuth>} />
           <Route path="/report" element={<RequireAuth><Report /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+          <Route path="/legal" element={<Legal />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/security" element={<Security />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ChatWidget />
