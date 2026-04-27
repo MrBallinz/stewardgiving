@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Landing from "./pages/Landing";
 import Faith from "./pages/Faith";
+import Demo from "./pages/Demo";
 import FAQ from "./pages/FAQ";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -32,6 +33,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/faith" element={<Faith />} />
+          <Route path="/demo" element={<Demo />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
