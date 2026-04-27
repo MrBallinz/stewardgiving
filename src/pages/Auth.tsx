@@ -16,7 +16,7 @@ import { Loader2 } from "lucide-react";
 const credSchema = z.object({
   email: z.string().trim().email({ message: "Enter a valid email" }).max(255),
   password: z.string().min(8, "At least 8 characters").max(100),
-});
+}).required();
 
 const Auth = () => {
   const navigate = useNavigate();
