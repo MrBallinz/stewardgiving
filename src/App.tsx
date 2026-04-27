@@ -14,6 +14,10 @@ import Covenant from "./pages/Covenant";
 import Report from "./pages/Report";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Legal from "./pages/Legal";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Security from "./pages/Security";
 import { RequireAuth } from "./components/RequireAuth";
 import { ChatWidget } from "./components/ChatWidget";
 
