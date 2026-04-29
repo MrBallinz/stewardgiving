@@ -1,4 +1,7 @@
 project_id = "ilbyouqfvcjhpnhyetkz"
 
 [functions.faith-chat]
-verify_jwt = false
+verify_jwt = true
+
+[functions.verify-recipient]
+verify_jwt = true

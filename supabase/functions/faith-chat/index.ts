@@ -1,9 +1,24 @@
 // Faith-rooted streaming chat via Lovable AI Gateway
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+// Authenticated + per-user in-memory rate limiting + restricted CORS.
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const ALLOWED_ORIGINS = new Set([
+  "https://stewardgiving.lovable.app",
+  "https://id-preview--f46fe20b-fd62-4cf4-8a60-9663e7eed2e3.lovable.app",
+  "http://localhost:8080",
+  "http://localhost:5173",
+]);
+
+function buildCors(origin: string | null) {
+  const allow = origin && ALLOWED_ORIGINS.has(origin) ? origin : "https://stewardgiving.lovable.app";
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
 
 const SYSTEM_PROMPT = `You are the Steward Companion — a warm, biblically grounded AI guide inside the Steward app.
 
@@ -24,13 +39,101 @@ Your voice:
 
 If asked about other faiths, respond with respect and clarity that Steward is built on a Christian conviction of stewardship, while welcoming anyone who wants to give with discipline.`;
 
+// Per-user sliding window: max 20 requests / 60s, max 200 / hour.
+type Bucket = { minute: number[]; hour: number[] };
+const buckets = new Map<string, Bucket>();
+const MINUTE_LIMIT = 20;
+const HOUR_LIMIT = 200;
+
+function rateLimit(userId: string): { ok: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const b = buckets.get(userId) ?? { minute: [], hour: [] };
+  b.minute = b.minute.filter((t) => now - t < 60_000);
+  b.hour = b.hour.filter((t) => now - t < 3_600_000);
+  if (b.minute.length >= MINUTE_LIMIT) {
+    buckets.set(userId, b);
+    return { ok: false, retryAfter: Math.ceil((60_000 - (now - b.minute[0])) / 1000) };
+  }
+  if (b.hour.length >= HOUR_LIMIT) {
+    buckets.set(userId, b);
+    return { ok: false, retryAfter: Math.ceil((3_600_000 - (now - b.hour[0])) / 1000) };
+  }
+  b.minute.push(now);
+  b.hour.push(now);
+  buckets.set(userId, b);
+  return { ok: true };
+}
+
 Deno.serve(async (req) => {
+  const corsHeaders = buildCors(req.headers.get("origin"));
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages } = await req.json();
+    // ---- Auth ----
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: claimsErr } = await supabase.auth.getClaims(token);
+    if (claimsErr || !claims?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = claims.claims.sub as string;
+
+    // ---- Rate limit ----
+    const rl = rateLimit(userId);
+    if (!rl.ok) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Please slow down." }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": String(rl.retryAfter ?? 60),
+          },
+        },
+      );
+    }
+
+    // ---- Validate input ----
+    const body = await req.json().catch(() => null);
+    const messages = Array.isArray(body?.messages) ? body.messages : null;
+    if (!messages || messages.length === 0 || messages.length > 40) {
+      return new Response(JSON.stringify({ error: "Invalid messages" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const cleaned = messages
+      .filter(
+        (m: any) =>
+          m && (m.role === "user" || m.role === "assistant") &&
+          typeof m.content === "string" && m.content.length <= 4000,
+      )
+      .map((m: any) => ({ role: m.role, content: m.content }));
+    if (cleaned.length === 0) {
+      return new Response(JSON.stringify({ error: "Invalid messages" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -44,10 +147,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            ...(Array.isArray(messages) ? messages : []),
-          ],
+          messages: [{ role: "system", content: SYSTEM_PROMPT }, ...cleaned],
           stream: true,
         }),
       },
@@ -56,25 +156,14 @@ Deno.serve(async (req) => {
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({
-            error: "Too many requests, please pause and try again shortly.",
-          }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
+          JSON.stringify({ error: "Too many requests, please pause and try again shortly." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({
-            error:
-              "AI credits exhausted. Please add funds to your Lovable AI workspace.",
-          }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
+          JSON.stringify({ error: "AI credits exhausted. Please add funds to your Lovable AI workspace." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
       const t = await response.text();
@@ -91,13 +180,8 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error("faith-chat error:", e);
     return new Response(
-      JSON.stringify({
-        error: e instanceof Error ? e.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
