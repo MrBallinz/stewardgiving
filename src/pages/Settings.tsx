@@ -200,7 +200,8 @@ const Settings = () => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={deleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    <AlertDialogAction onClick={deleteAccount} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                       Delete permanently
                     </AlertDialogAction>
                   </AlertDialogFooter>
