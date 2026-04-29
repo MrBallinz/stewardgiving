@@ -11,8 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/AppShell";
+import { ChurchSearch, type ChurchRow } from "@/components/ChurchSearch";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, ArrowRight, Sparkles } from "lucide-react";
+import { Loader2, ArrowRight, Sparkles, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { formatPercent } from "@/lib/format";
 
 const DEFAULT_SCRIPTURE =
