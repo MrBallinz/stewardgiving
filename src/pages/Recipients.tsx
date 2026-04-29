@@ -23,8 +23,9 @@ import { formatPercent } from "@/lib/format";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Plus, Pencil, Trash2, AlertTriangle, ExternalLink, Search, Sparkles, ShieldCheck, ShieldAlert, ShieldQuestion, Loader2 } from "lucide-react";
 import {
-  PLATFORMS, PLATFORM_BY_ID, DIRECTORY, buildDonateUrl, type PlatformId, type DirectoryEntry,
+  PLATFORMS, PLATFORM_BY_ID, buildDonateUrl, type PlatformId,
 } from "@/lib/giving-platforms";
+import { ChurchSearch, type ChurchRow } from "@/components/ChurchSearch";
 
 type RecipientType = "church" | "missions" | "nonprofit" | "other";
 type VerificationStatus = "unverified" | "verified" | "review" | "failed";
