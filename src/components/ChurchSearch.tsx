@@ -259,7 +259,7 @@ function SubmitChurchDialog(props: {
                 <button
                   key={d.id}
                   type="button"
-                  onClick={() => onSubmitted({ ...d, dba_name: null, denomination: null, ein: null } as ChurchRow)}
+                  onClick={() => onSubmitted({ ...d, dba_name: null, denomination: null, ein: null, giving_platform: null, verification_status: "community_submitted" } as ChurchRow)}
                   className="w-full text-left p-2 rounded-md bg-card hover:bg-muted/60 border border-border/60 text-sm"
                 >
                   <p className="font-medium">{d.legal_name}</p>
