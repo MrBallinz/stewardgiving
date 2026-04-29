@@ -213,8 +213,39 @@ const Onboarding = () => {
 
             <div className="space-y-5">
               <div className="space-y-2">
+                <Label>Find your church</Label>
+                <ChurchSearch
+                  autoFocus
+                  onSelect={(c) => {
+                    setPickedChurch(c);
+                    setRecipientName(c.dba_name ?? c.legal_name);
+                    setRecipientEin(c.ein ?? "");
+                    setRecipientType("church");
+                  }}
+                />
+                {pickedChurch && (
+                  <div className="flex items-start gap-2 rounded-md border border-success/30 bg-success/5 p-3 text-sm">
+                    <Check className="h-4 w-4 text-success mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{pickedChurch.dba_name ?? pickedChurch.legal_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {[pickedChurch.city, pickedChurch.state].filter(Boolean).join(", ")}
+                        {pickedChurch.giving_platform ? ` · gives via ${pickedChurch.giving_platform}` : ""}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] shrink-0">Linked</Badge>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/60" /></div>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-wider"><span className="bg-card px-2 text-muted-foreground">Or enter manually</span></div>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="rn">Name</Label>
-                <Input id="rn" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Grace Community Church" maxLength={120} />
+                <Input id="rn" value={recipientName} onChange={(e) => { setRecipientName(e.target.value); setPickedChurch(null); }} placeholder="Grace Community Church" maxLength={120} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rt">Type</Label>
