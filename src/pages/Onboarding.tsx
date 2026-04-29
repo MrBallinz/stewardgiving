@@ -12,9 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/AppShell";
 import { toast } from "@/hooks/use-toast";
-import { seedMockMonthsIfEmpty } from "@/lib/seed";
-import { Loader2, ArrowRight, Check, Banknote } from "lucide-react";
-import { formatPercent, formatCurrency } from "@/lib/format";
+import { Loader2, ArrowRight, Sparkles } from "lucide-react";
+import { formatPercent } from "@/lib/format";
 
 const DEFAULT_SCRIPTURE =
   'Honor the Lord with your wealth, with the firstfruits of all your crops. — Proverbs 3:9';
