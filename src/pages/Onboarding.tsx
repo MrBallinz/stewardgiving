@@ -270,6 +270,7 @@ const Onboarding = () => {
               </Button>
             </div>
           </Card>
+        )}
       </div>
     </div>
   );
