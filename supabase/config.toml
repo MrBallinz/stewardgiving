@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.verify-recipient]
 verify_jwt = true
+
+[functions.account-delete]
+verify_jwt = true
