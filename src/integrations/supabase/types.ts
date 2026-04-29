@@ -41,6 +41,33 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_rate_buckets: {
+        Row: {
+          hour_count: number
+          hour_window_start: string
+          minute_count: number
+          minute_window_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          hour_count?: number
+          hour_window_start?: string
+          minute_count?: number
+          minute_window_start?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          hour_count?: number
+          hour_window_start?: string
+          minute_count?: number
+          minute_window_start?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       giving_covenants: {
         Row: {
           auto_transfer: boolean
@@ -248,6 +275,30 @@ export type Database = {
           id?: string
           onboarded?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      webhook_events: {
+        Row: {
+          id: string
+          payload: Json | null
+          received_at: string
+          source: string
+          type: string | null
+        }
+        Insert: {
+          id: string
+          payload?: Json | null
+          received_at?: string
+          source: string
+          type?: string | null
+        }
+        Update: {
+          id?: string
+          payload?: Json | null
+          received_at?: string
+          source?: string
+          type?: string | null
         }
         Relationships: []
       }
