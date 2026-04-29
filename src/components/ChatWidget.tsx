@@ -1,10 +1,20 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { MessageCircle, Send, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+
+// Routes where the chat widget is hidden (pre-auth marketing/legal pages).
+const HIDDEN_ROUTES = new Set([
+  "/", "/auth", "/forgot-password", "/reset-password",
+  "/faith", "/demo", "/faq",
+  "/privacy", "/terms", "/security", "/legal",
+]);
 
 type Msg = { role: "user" | "assistant"; content: string };
 
