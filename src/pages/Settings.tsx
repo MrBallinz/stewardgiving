@@ -28,7 +28,9 @@ const Settings = () => {
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [businessType, setBusinessType] = useState("Service business");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -61,25 +63,47 @@ const Settings = () => {
   };
 
   const changePassword = async () => {
+    if (!user?.email) return;
     if (newPassword.length < 8) {
       return toast({ title: "Password too short", description: "Use at least 8 characters.", variant: "destructive" });
     }
+    if (!currentPassword) {
+      return toast({ title: "Enter your current password", description: "We need it to confirm it's really you.", variant: "destructive" });
+    }
     setSavingPassword(true);
+    // Re-authenticate with current password before changing.
+    const { error: reauthError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (reauthError) {
+      setSavingPassword(false);
+      return toast({ title: "Current password is incorrect", variant: "destructive" });
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setSavingPassword(false);
     if (error) return toast({ title: "Couldn't change password", description: error.message, variant: "destructive" });
     setNewPassword("");
+    setCurrentPassword("");
     toast({ title: "Password updated" });
   };
 
   const deleteAccount = async () => {
     if (!user) return;
-    // RLS + ON DELETE CASCADE handles all child rows; we wipe profile then sign out.
-    // (Removing the auth.users row requires a service-role function; left for a follow-up.)
-    const { error } = await supabase.from("profiles").delete().eq("id", user.id);
-    if (error) return toast({ title: "Couldn't delete data", description: error.message, variant: "destructive" });
+    setDeleting(true);
+    // Edge function uses the service role to delete the auth.users row,
+    // which cascades to all user-owned tables.
+    const { error } = await supabase.functions.invoke("account-delete");
+    setDeleting(false);
+    if (error) {
+      return toast({
+        title: "Couldn't delete account",
+        description: error.message ?? "Please try again or contact support.",
+        variant: "destructive",
+      });
+    }
     await supabase.auth.signOut();
-    toast({ title: "Account data deleted" });
+    toast({ title: "Account deleted", description: "Your account and all data have been permanently removed." });
     navigate("/");
   };
 
@@ -139,12 +163,16 @@ const Settings = () => {
                 <p className="text-sm text-muted-foreground">Change your sign-in password. (Not applicable for Google sign-in.)</p>
               </div>
               <div className="space-y-2">
+                <Label htmlFor="cp">Current password</Label>
+                <Input id="cp" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="np">New password</Label>
                 <Input id="np" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
                 <p className="text-xs text-muted-foreground">At least 8 characters.</p>
               </div>
               <div className="flex justify-end">
-                <Button onClick={changePassword} disabled={savingPassword || !newPassword}>
+                <Button onClick={changePassword} disabled={savingPassword || !newPassword || !currentPassword}>
                   {savingPassword && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Update password
                 </Button>
@@ -172,7 +200,8 @@ const Settings = () => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={deleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    <AlertDialogAction onClick={deleteAccount} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                       Delete permanently
                     </AlertDialogAction>
                   </AlertDialogFooter>

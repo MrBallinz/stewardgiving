@@ -275,7 +275,7 @@ const Landing = () => {
                 ))}
               </ul>
               <Button asChild variant={p.highlighted ? "default" : "outline"} className="w-full">
-                <Link to="/auth">Start free trial</Link>
+                <Link to="/auth">Get started free</Link>
               </Button>
             </Card>
           ))}
@@ -329,7 +329,7 @@ const Landing = () => {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/faith" className="hover:text-foreground">Statement of faith</Link></li>
               <li><Link to="/faq" className="hover:text-foreground">FAQ</Link></li>
-              <li><a href="#" className="hover:text-foreground">Contact</a></li>
+              <li><a href="mailto:hello@steward.app" className="hover:text-foreground">Contact</a></li>
             </ul>
           </div>
           <div>

@@ -12,9 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/AppShell";
 import { toast } from "@/hooks/use-toast";
-import { seedMockMonthsIfEmpty } from "@/lib/seed";
-import { Loader2, ArrowRight, Check, Banknote } from "lucide-react";
-import { formatPercent, formatCurrency } from "@/lib/format";
+import { Loader2, ArrowRight, Sparkles } from "lucide-react";
+import { formatPercent } from "@/lib/format";
 
 const DEFAULT_SCRIPTURE =
   'Honor the Lord with your wealth, with the firstfruits of all your crops. — Proverbs 3:9';
@@ -100,15 +99,9 @@ const Onboarding = () => {
   const finish = async () => {
     if (!user) return;
     setBusy(true);
-    // Mock bank connection
-    await supabase.from("bank_connections").insert({
-      user_id: user.id,
-      institution_name: "First Republic Bank",
-      account_mask: "4218",
-    });
-    // Seed historical data
-    await seedMockMonthsIfEmpty(user.id);
-    // Mark onboarded
+    // Mark onboarded. We do NOT seed any historical data — the dashboard starts
+    // empty until the user adds real monthly summaries themselves. (Bank/Plaid
+    // integration is not yet shipped; the onboarding step is informational only.)
     await supabase.from("profiles").update({ onboarded: true }).eq("id", user.id);
     setBusy(false);
     toast({ title: "You're all set", description: "Welcome to Steward." });
@@ -247,23 +240,22 @@ const Onboarding = () => {
 
         {step === 4 && (
           <Card className="p-8 shadow-card border-border/60 animate-fade-up">
-            <p className="text-sm font-medium text-gold uppercase tracking-wider mb-2">Connect your bank</p>
-            <h1 className="font-serif text-3xl font-semibold mb-2">One last step.</h1>
+            <p className="text-sm font-medium text-gold uppercase tracking-wider mb-2">You're ready</p>
+            <h1 className="font-serif text-3xl font-semibold mb-2">Step in with clear eyes.</h1>
             <p className="text-muted-foreground mb-8">
-              Read-only access to your business account so we can compute monthly profit. We never store funds and never move money without your approval.
+              Your dashboard starts empty. As you record monthly profit, we'll compute your covenant giving and build your year-end report. Bank connections (Plaid) and automated transfers are on our roadmap — for now, you'll log monthly numbers yourself.
             </p>
 
             <div className="rounded-xl border border-border bg-muted/40 p-6 flex items-start gap-4 mb-8">
               <div className="h-10 w-10 rounded-lg bg-gold-soft grid place-items-center shrink-0">
-                <Banknote className="h-5 w-5 text-foreground" />
+                <Sparkles className="h-5 w-5 text-foreground" />
               </div>
               <div className="flex-1">
-                <p className="font-medium">Connect with Plaid</p>
+                <p className="font-medium">Want to explore with sample data first?</p>
                 <p className="text-sm text-muted-foreground">
-                  Bank-grade encryption. Read-only. {minimum > 0 ? `Minimum giving: ${formatCurrency(minimum)}.` : ""}
+                  Try the interactive demo at <strong>/demo</strong> — it shows what Steward looks like with a year of activity, without touching your real account.
                 </p>
               </div>
-              <Check className="h-5 w-5 text-success mt-2" />
             </div>
 
             <p className="scripture text-sm mb-8">

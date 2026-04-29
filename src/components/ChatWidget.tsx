@@ -1,20 +1,32 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { MessageCircle, Send, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+
+// Routes where the chat widget is hidden (pre-auth marketing/legal pages).
+const HIDDEN_ROUTES = new Set([
+  "/", "/auth", "/forgot-password", "/reset-password",
+  "/faith", "/demo", "/faq",
+  "/privacy", "/terms", "/security", "/legal",
+]);
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 const GREETING: Msg = {
   role: "assistant",
   content:
-    "Peace to you. I'm the **Steward Companion** — here to help with the app, your giving covenant, or questions about faith-rooted stewardship.\n\nAsk me anything. *“Honor the Lord with your wealth, with the firstfruits of all your crops.”* — Prov. 3:9",
+    "Peace to you. I'm the **Steward Companion**, an AI assistant — here to help with the app, your giving covenant, or questions about faith-rooted stewardship. For tax, legal, or investment specifics, please consult a qualified professional.\n\nAsk me anything. *“Honor the Lord with your wealth, with the firstfruits of all your crops.”* — Prov. 3:9",
 };
 
 export const ChatWidget = () => {
+  const { pathname } = useLocation();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,12 +50,21 @@ export const ChatWidget = () => {
     setLoading(true);
 
     try {
+      // Use the user's session access token (faith-chat requires a real `sub` claim).
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error("Please sign in to chat with the Steward Companion.");
+        setMessages((prev) => prev.slice(0, -1));
+        setLoading(false);
+        return;
+      }
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/faith-chat`;
       const resp = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         // Strip greeting before sending so model doesn't think it said it (it did, but no need to resend system context)
         body: JSON.stringify({
@@ -117,6 +138,9 @@ export const ChatWidget = () => {
       setLoading(false);
     }
   };
+
+  // Hide on pre-auth marketing/legal pages, and for unauthenticated users.
+  if (HIDDEN_ROUTES.has(pathname) || !user) return null;
 
   return (
     <>
