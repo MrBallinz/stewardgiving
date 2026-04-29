@@ -160,6 +160,14 @@ const Auth = () => {
                     {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                     Sign in
                   </Button>
+                  <div className="text-center">
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
+                    >
+                      Forgot your password?
+                    </Link>
+                  </div>
                 </form>
               </TabsContent>
 
