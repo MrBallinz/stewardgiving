@@ -99,15 +99,9 @@ const Onboarding = () => {
   const finish = async () => {
     if (!user) return;
     setBusy(true);
-    // Mock bank connection
-    await supabase.from("bank_connections").insert({
-      user_id: user.id,
-      institution_name: "First Republic Bank",
-      account_mask: "4218",
-    });
-    // Seed historical data
-    await seedMockMonthsIfEmpty(user.id);
-    // Mark onboarded
+    // Mark onboarded. We do NOT seed any historical data — the dashboard starts
+    // empty until the user adds real monthly summaries themselves. (Bank/Plaid
+    // integration is not yet shipped; the onboarding step is informational only.)
     await supabase.from("profiles").update({ onboarded: true }).eq("id", user.id);
     setBusy(false);
     toast({ title: "You're all set", description: "Welcome to Steward." });
