@@ -289,7 +289,7 @@ const RecipientDialog = ({
   const [platformSlug, setPlatformSlug] = useState("");
   const [donateUrl, setDonateUrl] = useState("");
   const [website, setWebsite] = useState("");
-  const [search, setSearch] = useState("");
+  const [churchId, setChurchId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -302,30 +302,18 @@ const RecipientDialog = ({
       setPlatformSlug(editing?.platform_slug ?? "");
       setDonateUrl(editing?.donate_url ?? "");
       setWebsite(editing?.website ?? "");
-      setSearch("");
+      setChurchId(null);
     }
   }, [open, editing]);
 
-  const matches: DirectoryEntry[] = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q || editing) return [];
-    return DIRECTORY.filter((d) =>
-      d.name.toLowerCase().includes(q) ||
-      d.city?.toLowerCase().includes(q) ||
-      d.website?.toLowerCase().includes(q)
-    ).slice(0, 6);
-  }, [search, editing]);
-
-  const applyDirectoryEntry = (d: DirectoryEntry) => {
-    setName(d.name);
-    setType(d.type);
-    setPlatform(d.platform);
-    setPlatformSlug(d.slug ?? "");
-    setDonateUrl(d.donateUrl ?? "");
-    setWebsite(d.website ?? "");
-    setEin(d.ein ?? "");
-    setSearch("");
-    toast({ title: `Loaded ${d.name}`, description: `Giving via ${PLATFORM_BY_ID[d.platform].name}.` });
+  const applyChurch = (c: ChurchRow) => {
+    setName(c.dba_name ?? c.legal_name);
+    setChurchId(c.id);
+    setEin(c.ein ?? "");
+    setWebsite(c.website ?? "");
+    setDonateUrl(c.giving_url ?? "");
+    if (c.giving_platform) setPlatform(c.giving_platform as PlatformId);
+    toast({ title: `Loaded ${c.dba_name ?? c.legal_name}` });
   };
 
   const previewUrl = useMemo(() => {
