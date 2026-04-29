@@ -78,32 +78,44 @@ export type Database = {
         Row: {
           allocation_percent: number
           created_at: string
+          donate_url: string | null
           ein: string | null
           id: string
           name: string
+          platform: string | null
+          platform_slug: string | null
           type: Database["public"]["Enums"]["recipient_type"]
           updated_at: string
           user_id: string
+          website: string | null
         }
         Insert: {
           allocation_percent?: number
           created_at?: string
+          donate_url?: string | null
           ein?: string | null
           id?: string
           name: string
+          platform?: string | null
+          platform_slug?: string | null
           type?: Database["public"]["Enums"]["recipient_type"]
           updated_at?: string
           user_id: string
+          website?: string | null
         }
         Update: {
           allocation_percent?: number
           created_at?: string
+          donate_url?: string | null
           ein?: string | null
           id?: string
           name?: string
+          platform?: string | null
+          platform_slug?: string | null
           type?: Database["public"]["Enums"]["recipient_type"]
           updated_at?: string
           user_id?: string
+          website?: string | null
         }
         Relationships: []
       }
