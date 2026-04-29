@@ -21,10 +21,12 @@ type Msg = { role: "user" | "assistant"; content: string };
 const GREETING: Msg = {
   role: "assistant",
   content:
-    "Peace to you. I'm the **Steward Companion** — here to help with the app, your giving covenant, or questions about faith-rooted stewardship.\n\nAsk me anything. *“Honor the Lord with your wealth, with the firstfruits of all your crops.”* — Prov. 3:9",
+    "Peace to you. I'm the **Steward Companion**, an AI assistant — here to help with the app, your giving covenant, or questions about faith-rooted stewardship. For tax, legal, or investment specifics, please consult a qualified professional.\n\nAsk me anything. *“Honor the Lord with your wealth, with the firstfruits of all your crops.”* — Prov. 3:9",
 };
 
 export const ChatWidget = () => {
+  const { pathname } = useLocation();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
