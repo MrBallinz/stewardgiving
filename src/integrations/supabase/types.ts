@@ -511,7 +511,12 @@ export type Database = {
     }
     Enums: {
       recipient_type: "church" | "missions" | "nonprofit" | "other"
-      summary_status: "pending" | "transferred" | "skipped"
+      summary_status:
+        | "pending"
+        | "transferred"
+        | "skipped"
+        | "reviewed"
+        | "completed"
       transaction_status: "pending" | "completed" | "failed"
     }
     CompositeTypes: {
@@ -641,7 +646,13 @@ export const Constants = {
   public: {
     Enums: {
       recipient_type: ["church", "missions", "nonprofit", "other"],
-      summary_status: ["pending", "transferred", "skipped"],
+      summary_status: [
+        "pending",
+        "transferred",
+        "skipped",
+        "reviewed",
+        "completed",
+      ],
       transaction_status: ["pending", "completed", "failed"],
     },
   },
