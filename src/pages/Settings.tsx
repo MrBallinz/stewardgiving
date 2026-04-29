@@ -63,25 +63,47 @@ const Settings = () => {
   };
 
   const changePassword = async () => {
+    if (!user?.email) return;
     if (newPassword.length < 8) {
       return toast({ title: "Password too short", description: "Use at least 8 characters.", variant: "destructive" });
     }
+    if (!currentPassword) {
+      return toast({ title: "Enter your current password", description: "We need it to confirm it's really you.", variant: "destructive" });
+    }
     setSavingPassword(true);
+    // Re-authenticate with current password before changing.
+    const { error: reauthError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (reauthError) {
+      setSavingPassword(false);
+      return toast({ title: "Current password is incorrect", variant: "destructive" });
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setSavingPassword(false);
     if (error) return toast({ title: "Couldn't change password", description: error.message, variant: "destructive" });
     setNewPassword("");
+    setCurrentPassword("");
     toast({ title: "Password updated" });
   };
 
   const deleteAccount = async () => {
     if (!user) return;
-    // RLS + ON DELETE CASCADE handles all child rows; we wipe profile then sign out.
-    // (Removing the auth.users row requires a service-role function; left for a follow-up.)
-    const { error } = await supabase.from("profiles").delete().eq("id", user.id);
-    if (error) return toast({ title: "Couldn't delete data", description: error.message, variant: "destructive" });
+    setDeleting(true);
+    // Edge function uses the service role to delete the auth.users row,
+    // which cascades to all user-owned tables.
+    const { error } = await supabase.functions.invoke("account-delete");
+    setDeleting(false);
+    if (error) {
+      return toast({
+        title: "Couldn't delete account",
+        description: error.message ?? "Please try again or contact support.",
+        variant: "destructive",
+      });
+    }
     await supabase.auth.signOut();
-    toast({ title: "Account data deleted" });
+    toast({ title: "Account deleted", description: "Your account and all data have been permanently removed." });
     navigate("/");
   };
 
