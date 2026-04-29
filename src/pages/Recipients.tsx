@@ -62,12 +62,14 @@ const Recipients = () => {
   const total = useMemo(() => items.reduce((a, r) => a + Number(r.allocation_percent), 0), [items]);
   const balanced = Math.abs(total - 100) < 0.05;
 
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
   const refresh = async () => {
     if (!user) return;
     setLoading(true);
     const { data } = await supabase
       .from("giving_recipients")
-      .select("id, name, type, allocation_percent, ein, platform, platform_slug, donate_url, website")
+      .select("id, name, type, allocation_percent, ein, platform, platform_slug, donate_url, website, verification_status, verified_at, verified_name, verified_logo_url, verified_ein, verification_notes")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true });
     setItems((data as Recipient[]) ?? []);
@@ -80,6 +82,25 @@ const Recipients = () => {
     const { error } = await supabase.from("giving_recipients").delete().eq("id", id);
     if (error) return toast({ title: "Couldn't delete", description: error.message, variant: "destructive" });
     toast({ title: "Recipient removed" });
+    refresh();
+  };
+
+  const verify = async (r: Recipient) => {
+    if (!r.website && !r.donate_url) {
+      return toast({ title: "Add a website or donate URL first", variant: "destructive" });
+    }
+    setVerifyingId(r.id);
+    const { data, error } = await supabase.functions.invoke("verify-recipient", {
+      body: { recipient_id: r.id },
+    });
+    setVerifyingId(null);
+    if (error) return toast({ title: "Verification failed", description: error.message, variant: "destructive" });
+    const status = (data as { status?: string })?.status;
+    toast({
+      title: status === "verified" ? "Recipient verified" : status === "review" ? "Needs review" : "Could not verify",
+      description: (data as { verification_notes?: string })?.verification_notes ?? undefined,
+      variant: status === "failed" ? "destructive" : "default",
+    });
     refresh();
   };
 
