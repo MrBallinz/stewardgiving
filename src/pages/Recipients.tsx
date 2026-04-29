@@ -339,6 +339,7 @@ const RecipientDialog = ({
       platform_slug: platformSlug.trim() || null,
       donate_url: donateUrl.trim() || null,
       website: website.trim() || null,
+      church_id: churchId,
     };
     const { error } = editing
       ? await supabase.from("giving_recipients").update(payload).eq("id", editing.id)
