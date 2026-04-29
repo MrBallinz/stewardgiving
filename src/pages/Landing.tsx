@@ -12,6 +12,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import phoneMockup from "@/assets/phone-mockup.png";
+import laptopMockup from "@/assets/laptop-mockup.png";
 import brandTexture from "@/assets/brand-texture.jpg";
 import illoBank from "@/assets/illo-bank.png";
 import illoHands from "@/assets/illo-hands.png";
@@ -129,15 +130,15 @@ const Landing = () => {
             </p>
           </div>
 
-          {/* Hero visual: phone mockup */}
+          {/* Hero visual: laptop mockup */}
           <div className="lg:col-span-5 relative animate-fade-up [animation-delay:200ms] opacity-0">
             <div className="absolute -inset-8 bg-gold/10 blur-3xl rounded-full pointer-events-none" />
             <img
-              src={phoneMockup}
-              alt="Steward mobile app showing monthly giving and recipient breakdown"
-              className="relative w-full max-w-md mx-auto drop-shadow-2xl"
-              width={900}
-              height={1280}
+              src={laptopMockup}
+              alt="Steward desktop dashboard on a MacBook showing monthly profit, giving covenant, and trend chart"
+              className="relative w-full max-w-2xl mx-auto drop-shadow-2xl"
+              width={1536}
+              height={1024}
             />
           </div>
         </div>
