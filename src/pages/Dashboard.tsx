@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowRight, CheckCircle2, Clock } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Sparkles, Loader2, Trash2 } from "lucide-react";
 import { formatCurrency, formatPercent, monthLabel } from "@/lib/format";
 import { toast } from "@/hooks/use-toast";
+import { seedSampleData, clearSampleData } from "@/lib/seedSampleData";
 
 type Summary = {
   id: string;
@@ -20,7 +21,8 @@ type Summary = {
   net_profit: number;
   giving_percent: number;
   giving_amount: number;
-  status: "pending" | "transferred" | "skipped";
+  status: "pending" | "transferred" | "skipped" | "reviewed" | "completed";
+  is_sample?: boolean;
 };
 
 const Dashboard = () => {
@@ -56,9 +58,14 @@ const Dashboard = () => {
     })();
   }, [user, navigate]);
 
-  const current = summaries.find((s) => s.status === "pending") ?? summaries[0];
-  const transferred = summaries.filter((s) => s.status === "transferred");
-  const ytd = transferred.reduce(
+  const realSummaries = summaries.filter((s) => !s.is_sample);
+  const sampleSummaries = summaries.filter((s) => s.is_sample);
+  const showingSample = realSummaries.length === 0 && sampleSummaries.length > 0;
+  const visible = showingSample ? sampleSummaries : realSummaries;
+
+  const current = visible.find((s) => s.status === "pending") ?? visible[0];
+  const ytdBase = visible.filter((s) => s.status === "transferred" || s.status === "completed");
+  const ytd = ytdBase.reduce(
     (acc, s) => {
       acc.revenue += Number(s.total_revenue);
       acc.profit += Number(s.net_profit);
