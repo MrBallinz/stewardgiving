@@ -363,38 +363,12 @@ const RecipientDialog = ({
 
         {!editing && (
           <div className="space-y-2">
-            <Label htmlFor="r-search" className="flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-accent" /> Quick find
+            <Label className="flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-accent" /> Search the Steward directory
             </Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="r-search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Try 'Lifepoint', 'Compassion', 'IJM'…"
-                className="pl-9"
-              />
-            </div>
-            {matches.length > 0 && (
-              <Card className="border-border/60 divide-y divide-border/60 max-h-56 overflow-y-auto">
-                {matches.map((d) => (
-                  <button
-                    key={d.name}
-                    type="button"
-                    onClick={() => applyDirectoryEntry(d)}
-                    className="w-full text-left p-3 hover:bg-muted/50 transition flex items-start justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm truncate">{d.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {d.city ? `${d.city}, ${d.state} · ` : ""}via {PLATFORM_BY_ID[d.platform].name}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="text-[10px] shrink-0">{TYPE_LABEL[d.type]}</Badge>
-                  </button>
-                ))}
-              </Card>
+            <ChurchSearch onSelect={applyChurch} placeholder="Search by church name and city" />
+            {churchId && (
+              <p className="text-xs text-success">Linked to directory entry. Verification stays in sync.</p>
             )}
           </div>
         )}
