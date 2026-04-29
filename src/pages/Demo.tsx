@@ -58,6 +58,7 @@ const CONNECTORS: Connector[] = [
 ];
 
 const CATEGORY_META: Record<Connector["category"], { icon: typeof Building2; label: string; blurb: string }> = {
+  Tithing: { icon: HandCoins, label: "Tithing & Giving Platforms", blurb: "Tithe through Overflow and the platforms your church already trusts — including stock and crypto giving." },
   Church: { icon: Building2, label: "Church Management", blurb: "Send gifts directly into your church's giving platform." },
   Missions: { icon: Heart, label: "Missions & Nonprofits", blurb: "Support the global Body and Kingdom causes you love." },
   Bank: { icon: Wallet, label: "Banks & Payment Rails", blurb: "Read profit, move funds — securely, never stored." },
