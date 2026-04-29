@@ -52,6 +52,19 @@ const TYPE_LABEL: Record<RecipientType, string> = {
 
 const PIE_COLORS = ["hsl(217 51% 12%)", "hsl(41 47% 59%)", "hsl(217 30% 35%)", "hsl(41 30% 45%)", "hsl(217 20% 55%)", "hsl(38 25% 70%)"];
 
+const verificationBadge = (status: VerificationStatus) => {
+  switch (status) {
+    case "verified":
+      return { icon: <ShieldCheck className="h-3 w-3" />, label: "Verified", className: "border-success/40 text-success bg-success/5" };
+    case "review":
+      return { icon: <ShieldQuestion className="h-3 w-3" />, label: "Needs review", className: "border-gold/50 text-foreground bg-gold-soft/40" };
+    case "failed":
+      return { icon: <ShieldAlert className="h-3 w-3" />, label: "Unverified", className: "border-destructive/40 text-destructive bg-destructive/5" };
+    default:
+      return { icon: <ShieldQuestion className="h-3 w-3" />, label: "Unverified", className: "border-border text-muted-foreground" };
+  }
+};
+
 const Recipients = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
