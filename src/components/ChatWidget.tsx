@@ -50,12 +50,21 @@ export const ChatWidget = () => {
     setLoading(true);
 
     try {
+      // Use the user's session access token (faith-chat requires a real `sub` claim).
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error("Please sign in to chat with the Steward Companion.");
+        setMessages((prev) => prev.slice(0, -1));
+        setLoading(false);
+        return;
+      }
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/faith-chat`;
       const resp = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
         // Strip greeting before sending so model doesn't think it said it (it did, but no need to resend system context)
         body: JSON.stringify({
