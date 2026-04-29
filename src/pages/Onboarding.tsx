@@ -83,7 +83,7 @@ const Onboarding = () => {
   const saveStep3 = async () => {
     if (!user) return;
     if (!recipientName.trim()) {
-      toast({ title: "Add a recipient name", variant: "destructive" });
+      toast({ title: "Pick a church or add a recipient name", variant: "destructive" });
       return;
     }
     setBusy(true);
@@ -93,6 +93,10 @@ const Onboarding = () => {
       type: recipientType,
       allocation_percent: 100,
       ein: recipientEin.trim() || null,
+      church_id: pickedChurch?.id ?? null,
+      website: pickedChurch?.website ?? null,
+      donate_url: pickedChurch?.giving_url ?? null,
+      platform: (pickedChurch?.giving_platform as any) ?? null,
     });
     setBusy(false);
     if (error) return toast({ title: "Couldn't save recipient", description: error.message, variant: "destructive" });
