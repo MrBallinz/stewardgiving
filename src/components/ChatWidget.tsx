@@ -139,6 +139,9 @@ export const ChatWidget = () => {
     }
   };
 
+  // Hide on pre-auth marketing/legal pages, and for unauthenticated users.
+  if (HIDDEN_ROUTES.has(pathname) || !user) return null;
+
   return (
     <>
       {!open && (
