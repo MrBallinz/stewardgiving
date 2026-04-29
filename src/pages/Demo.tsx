@@ -24,12 +24,18 @@ import { cn } from "@/lib/utils";
 
 type Connector = {
   name: string;
-  category: "Church" | "Missions" | "Bank" | "Accounting";
+  category: "Tithing" | "Church" | "Missions" | "Bank" | "Accounting";
   initials: string;
   tone: string;
 };
 
 const CONNECTORS: Connector[] = [
+  // Tithing & stock/crypto giving platforms
+  { name: "Overflow", category: "Tithing", initials: "Ov", tone: "from-purple-500/20 to-purple-500/5" },
+  { name: "DonorBox", category: "Tithing", initials: "Db", tone: "from-fuchsia-500/20 to-fuchsia-500/5" },
+  { name: "Givelify", category: "Tithing", initials: "Gv", tone: "from-violet-500/20 to-violet-500/5" },
+  { name: "EasyTithe", category: "Tithing", initials: "Et", tone: "from-purple-400/20 to-purple-400/5" },
+  { name: "Generis", category: "Tithing", initials: "Gn", tone: "from-pink-400/20 to-pink-400/5" },
   // Church management
   { name: "Tithe.ly", category: "Church", initials: "Tl", tone: "from-sky-500/20 to-sky-500/5" },
   { name: "Pushpay", category: "Church", initials: "Pp", tone: "from-blue-500/20 to-blue-500/5" },
