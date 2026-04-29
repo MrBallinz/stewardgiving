@@ -1,13 +1,16 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+// IMPORTANT: This config is for a future native build. The legacy `server.url`
+// pointing at the Lovable preview environment was removed because it would have
+// caused any installed native app to load a dev URL over the network.
+// When ready to ship native apps:
+//   1. Update `appId` to a real reverse-DNS bundle ID (e.g. app.steward.giving)
+//   2. Run `bun run build` then `npx cap sync` to bundle `dist/` into the app
+//   3. Configure signing certs and submit through App Store Connect / Play Console
 const config: CapacitorConfig = {
-  appId: 'app.lovable.f46fe20bfd624cf48a609663e7eed2e3',
+  appId: 'app.steward.giving',
   appName: 'Steward',
   webDir: 'dist',
-  server: {
-    url: 'https://f46fe20b-fd62-4cf4-8a60-9663e7eed2e3.lovableproject.com?forceHideBadge=true',
-    cleartext: true,
-  },
   ios: {
     contentInset: 'always',
   },
