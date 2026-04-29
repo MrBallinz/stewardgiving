@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowRight, CheckCircle2, Clock } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Sparkles, Loader2, Trash2 } from "lucide-react";
 import { formatCurrency, formatPercent, monthLabel } from "@/lib/format";
 import { toast } from "@/hooks/use-toast";
+import { seedSampleData, clearSampleData } from "@/lib/seedSampleData";
 
 type Summary = {
   id: string;
@@ -20,7 +21,8 @@ type Summary = {
   net_profit: number;
   giving_percent: number;
   giving_amount: number;
-  status: "pending" | "transferred" | "skipped";
+  status: "pending" | "transferred" | "skipped" | "reviewed" | "completed";
+  is_sample?: boolean;
 };
 
 const Dashboard = () => {
@@ -56,9 +58,14 @@ const Dashboard = () => {
     })();
   }, [user, navigate]);
 
-  const current = summaries.find((s) => s.status === "pending") ?? summaries[0];
-  const transferred = summaries.filter((s) => s.status === "transferred");
-  const ytd = transferred.reduce(
+  const realSummaries = summaries.filter((s) => !s.is_sample);
+  const sampleSummaries = summaries.filter((s) => s.is_sample);
+  const showingSample = realSummaries.length === 0 && sampleSummaries.length > 0;
+  const visible = showingSample ? sampleSummaries : realSummaries;
+
+  const current = visible.find((s) => s.status === "pending") ?? visible[0];
+  const ytdBase = visible.filter((s) => s.status === "transferred" || s.status === "completed");
+  const ytd = ytdBase.reduce(
     (acc, s) => {
       acc.revenue += Number(s.total_revenue);
       acc.profit += Number(s.net_profit);
@@ -123,6 +130,59 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="space-y-8">
+            {/* Empty state — no real data yet, offer sample */}
+            {realSummaries.length === 0 && !showingSample && (
+              <Card className="p-8 md:p-10 shadow-card border-dashed border-border bg-card text-center space-y-5">
+                <div className="space-y-2">
+                  <p className="font-serif text-2xl">No giving recorded yet</p>
+                  <p className="text-muted-foreground max-w-lg mx-auto">
+                    Live bank connection isn't active in this MVP. Add a month manually, or load
+                    clearly-labeled sample data to preview the Steward workflow.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      if (!user) return;
+                      try {
+                        await seedSampleData(user.id);
+                        toast({ title: "Sample data loaded", description: "All sample rows are excluded from your real year-end report." });
+                        const { data: sums } = await supabase.from("monthly_summaries").select("*").eq("user_id", user.id).order("month", { ascending: false });
+                        setSummaries((sums as Summary[]) ?? []);
+                      } catch (e: any) {
+                        toast({ title: "Couldn't load sample", description: e.message, variant: "destructive" });
+                      }
+                    }}
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" /> Load sample dashboard data
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {/* Sample-mode persistent badge */}
+            {showingSample && (
+              <Card className="p-4 border-gold/50 bg-gold-soft/40 flex flex-wrap items-center justify-between gap-3">
+                <div className="text-sm">
+                  <p className="font-medium">Sample Data</p>
+                  <p className="text-muted-foreground text-xs">These rows are for exploring Steward. They're excluded from your real year-end report.</p>
+                </div>
+                <Button
+                  variant="ghost" size="sm"
+                  onClick={async () => {
+                    if (!user) return;
+                    await clearSampleData(user.id);
+                    const { data: sums } = await supabase.from("monthly_summaries").select("*").eq("user_id", user.id).order("month", { ascending: false });
+                    setSummaries((sums as Summary[]) ?? []);
+                    toast({ title: "Sample data cleared" });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-1.5" /> Clear sample
+                </Button>
+              </Card>
+            )}
+
             {/* This month */}
             {current && (
               <Card className="p-8 md:p-10 shadow-elevated border-border/60 relative overflow-hidden">
@@ -146,13 +206,13 @@ const Dashboard = () => {
                   />
                 </div>
 
-                {current.status === "pending" && (
+                {(current.status === "pending" || current.status === "reviewed") && (
                   <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-border/60">
                     <p className="text-sm text-muted-foreground">
-                      Approving will mark this giving as transferred and allocate to your recipients.
+                      Steward calculates your giving. You complete each gift through your church or nonprofit's giving platform.
                     </p>
-                    <Button onClick={approveCurrent} disabled={approving} size="lg">
-                      Review and approve
+                    <Button onClick={() => navigate(`/review/${current.id}`)} size="lg">
+                      Review and record
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
@@ -257,19 +317,22 @@ const StatusBadge = ({
   status,
   compact,
 }: {
-  status: "pending" | "transferred" | "skipped";
+  status: "pending" | "transferred" | "skipped" | "reviewed" | "completed";
   compact?: boolean;
 }) => {
-  if (status === "transferred") {
+  if (status === "transferred" || status === "completed") {
     return (
       <Badge variant="outline" className="border-success/40 bg-success/10 text-success gap-1.5">
         <CheckCircle2 className="h-3 w-3" />
-        {compact ? "Transferred" : "Transferred"}
+        {status === "completed" ? "Complete" : "Transferred"}
       </Badge>
     );
   }
   if (status === "skipped") {
     return <Badge variant="outline" className="text-muted-foreground">Skipped</Badge>;
+  }
+  if (status === "reviewed") {
+    return <Badge variant="outline" className="border-gold/50 bg-gold-soft text-foreground">Reviewed</Badge>;
   }
   return (
     <Badge variant="outline" className="border-gold/50 bg-gold-soft text-foreground gap-1.5">

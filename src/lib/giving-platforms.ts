@@ -1,288 +1,126 @@
-// Curated directory of giving platforms used by churches, missions, and nonprofits.
-// This is the source of truth for "how does money actually reach a recipient."
-// In demo mode we don't move money — we link out to the recipient's official page
-// on their chosen platform so the user can complete the gift there.
+// Steward — known giving platforms.
+// This file serves both the new ChurchSearch flow and the existing Recipients page.
 
 export type PlatformId =
-  | "overflow"
   | "tithely"
   | "pushpay"
-  | "planning_center"
-  | "subsplash"
   | "givelify"
+  | "anedot"
+  | "subsplash"
+  | "vanco"
+  | "churchtrac"
+  | "overflow"
+  | "planning_center"
+  | "easytithe"
+  | "stripe_direct"
   | "every_org"
-  | "pure_charity"
-  | "give_directly"
-  | "compassion"
-  | "paypal"
-  | "stripe_link"
-  | "ach"
-  | "other";
+  | "unknown";
 
-export type GivingPlatform = {
+export type PlatformCategory = "Church" | "Missions / Nonprofit" | "Direct";
+
+export type Platform = {
   id: PlatformId;
   name: string;
-  category: "Church" | "Missions / Nonprofit" | "Direct";
+  category: PlatformCategory;
   description: string;
-  // How a recipient page URL is typically structured. {slug} is the org's handle.
-  urlPattern?: string;
-  homepage: string;
-  supports: ("one_time" | "recurring" | "ach" | "card" | "stock" | "crypto")[];
+  urlPattern?: string; // {slug} placeholder
 };
 
-export const PLATFORMS: GivingPlatform[] = [
-  {
-    id: "overflow",
-    name: "Overflow",
-    category: "Church",
-    description: "Stock, crypto, and cash giving used by many modern US churches.",
-    urlPattern: "https://donate.overflow.co/{slug}",
-    homepage: "https://overflow.co",
-    supports: ["one_time", "recurring", "card", "ach", "stock", "crypto"],
-  },
-  {
-    id: "tithely",
-    name: "Tithe.ly",
-    category: "Church",
-    description: "Most widely used church giving platform in the US.",
-    urlPattern: "https://tithe.ly/give_new/www/#/tithely/give-one-time/{slug}",
-    homepage: "https://tithe.ly",
-    supports: ["one_time", "recurring", "card", "ach"],
-  },
-  {
-    id: "pushpay",
-    name: "Pushpay",
-    category: "Church",
-    description: "Enterprise giving for large multi-site churches.",
-    homepage: "https://pushpay.com",
-    supports: ["one_time", "recurring", "card", "ach"],
-  },
-  {
-    id: "planning_center",
-    name: "Planning Center Giving",
-    category: "Church",
-    description: "Giving inside the Planning Center church management suite.",
-    urlPattern: "https://{slug}.churchcenter.com/giving",
-    homepage: "https://planningcenter.com/giving",
-    supports: ["one_time", "recurring", "card", "ach"],
-  },
-  {
-    id: "subsplash",
-    name: "Subsplash Giving",
-    category: "Church",
-    description: "App + web giving bundled with church mobile apps.",
-    homepage: "https://subsplash.com/giving",
-    supports: ["one_time", "recurring", "card", "ach"],
-  },
-  {
-    id: "givelify",
-    name: "Givelify",
-    category: "Church",
-    description: "Mobile-first giving popular with smaller congregations.",
-    urlPattern: "https://www.givelify.com/donate/{slug}",
-    homepage: "https://givelify.com",
-    supports: ["one_time", "recurring", "card"],
-  },
-  {
-    id: "every_org",
-    name: "Every.org",
-    category: "Missions / Nonprofit",
-    description: "Free giving platform for any US 501(c)(3).",
-    urlPattern: "https://www.every.org/{slug}",
-    homepage: "https://every.org",
-    supports: ["one_time", "recurring", "card", "ach", "stock", "crypto"],
-  },
-  {
-    id: "pure_charity",
-    name: "Pure Charity",
-    category: "Missions / Nonprofit",
-    description: "Mission trip & nonprofit fundraising platform.",
-    homepage: "https://purecharity.com",
-    supports: ["one_time", "recurring", "card", "ach"],
-  },
-  {
-    id: "give_directly",
-    name: "GiveDirectly",
-    category: "Missions / Nonprofit",
-    description: "Direct cash transfers to families in extreme poverty.",
-    homepage: "https://givedirectly.org",
-    supports: ["one_time", "recurring", "card", "ach"],
-  },
-  {
-    id: "compassion",
-    name: "Compassion International",
-    category: "Missions / Nonprofit",
-    description: "Child sponsorship and Christian relief.",
-    homepage: "https://compassion.com",
-    supports: ["one_time", "recurring", "card", "ach"],
-  },
-  {
-    id: "paypal",
-    name: "PayPal Giving",
-    category: "Direct",
-    description: "Direct PayPal donation page.",
-    homepage: "https://paypal.com",
-    supports: ["one_time", "recurring", "card"],
-  },
-  {
-    id: "stripe_link",
-    name: "Stripe Payment Link",
-    category: "Direct",
-    description: "Custom Stripe-hosted donation page.",
-    homepage: "https://stripe.com",
-    supports: ["one_time", "recurring", "card", "ach"],
-  },
-  {
-    id: "ach",
-    name: "Bank Transfer (ACH)",
-    category: "Direct",
-    description: "Direct ACH to the recipient's bank account.",
-    supports: ["one_time", "recurring", "ach"],
-    homepage: "",
-  },
-  {
-    id: "other",
-    name: "Other / In-person",
-    category: "Direct",
-    description: "Tracked here for records only — gift completed elsewhere.",
-    homepage: "",
-    supports: ["one_time"],
-  },
+export const PLATFORMS: Platform[] = [
+  { id: "tithely", name: "Tithe.ly", category: "Church",
+    description: "Popular giving platform for churches.",
+    urlPattern: "https://tithe.ly/give?c={slug}" },
+  { id: "pushpay", name: "Pushpay", category: "Church",
+    description: "Used by larger congregations.",
+    urlPattern: "https://pushpay.com/g/{slug}" },
+  { id: "givelify", name: "Givelify", category: "Church",
+    description: "Mobile-first giving app.",
+    urlPattern: "https://www.givelify.com/donate/{slug}" },
+  { id: "anedot", name: "Anedot", category: "Church",
+    description: "Donation processor for churches and nonprofits.",
+    urlPattern: "https://anedot.com/{slug}" },
+  { id: "subsplash", name: "Subsplash", category: "Church",
+    description: "Church platform with built-in giving.",
+    urlPattern: "https://subsplash.com/+{slug}/give" },
+  { id: "vanco", name: "Vanco", category: "Church",
+    description: "Faith-based payment processor.",
+    urlPattern: "https://secure.myvanco.com/{slug}" },
+  { id: "churchtrac", name: "ChurchTrac", category: "Church",
+    description: "Church management with giving.",
+    urlPattern: "https://www.churchtrac.com/{slug}" },
+  { id: "overflow", name: "Overflow", category: "Church",
+    description: "Stock and crypto giving.",
+    urlPattern: "https://overflow.co/give/{slug}" },
+  { id: "planning_center", name: "Planning Center", category: "Church",
+    description: "Church management with Church Center giving.",
+    urlPattern: "https://{slug}.churchcenter.com/giving" },
+  { id: "easytithe", name: "EasyTithe", category: "Church",
+    description: "Simple online giving.",
+    urlPattern: "https://easytithe.com/{slug}" },
+  { id: "stripe_direct", name: "Direct (Stripe)", category: "Direct",
+    description: "Org's own donation page (often Stripe-powered)." },
+  { id: "every_org", name: "every.org", category: "Missions / Nonprofit",
+    description: "Free 501(c)(3) donation routing.",
+    urlPattern: "https://www.every.org/{slug}" },
+  { id: "unknown", name: "Unknown", category: "Direct",
+    description: "Platform not detected — manual instructions." },
 ];
 
-export const PLATFORM_BY_ID: Record<PlatformId, GivingPlatform> =
-  Object.fromEntries(PLATFORMS.map((p) => [p.id, p])) as Record<PlatformId, GivingPlatform>;
+export const PLATFORM_BY_ID: Record<PlatformId, Platform> = Object.fromEntries(
+  PLATFORMS.map((p) => [p.id, p])
+) as Record<PlatformId, Platform>;
 
-// Curated directory of well-known recipients. Slugs verified against each
-// platform's public donation URL. This is the seed list users can search.
-export type DirectoryEntry = {
+export function platformLabel(p?: string | null): string {
+  if (!p) return "No platform detected";
+  return PLATFORM_BY_ID[p as PlatformId]?.name ?? p;
+}
+
+export function platformBadgeText(p?: string | null): string {
+  if (!p) return "No platform detected — manual instructions";
+  return `Gives via ${platformLabel(p)}`;
+}
+
+export function buildDonateUrl(params: {
   name: string;
   type: "church" | "missions" | "nonprofit";
+  platform: PlatformId | null;
+  slug?: string | null;
+}): string | null {
+  const { platform, slug } = params;
+  if (!platform) return null;
+  const p = PLATFORM_BY_ID[platform];
+  if (!p?.urlPattern) return null;
+  if (!slug) return null;
+  return p.urlPattern.replace("{slug}", encodeURIComponent(slug));
+}
+
+// ---- Lightweight directory used by the legacy Recipients quick-pick.
+// (Real church search now lives in <ChurchSearch /> backed by the churches table.)
+export type DirectoryEntry = {
+  name: string;
+  type: "church" | "missions" | "nonprofit" | "other";
   city?: string;
   state?: string;
   website?: string;
-  platform: PlatformId;
-  slug?: string;       // used to build the donation URL
-  donateUrl?: string;  // overrides urlPattern when present
+  donateUrl?: string;
   ein?: string;
+  platform: PlatformId;
+  slug?: string;
 };
 
 export const DIRECTORY: DirectoryEntry[] = [
-  // Churches — Overflow
-  {
-    name: "Lifepoint Church",
-    type: "church",
-    city: "Wilmington",
-    state: "NC",
-    website: "https://lifepointnow.com",
-    platform: "overflow",
-    slug: "lifepointchurchnc",
-    donateUrl: "https://donate.overflow.co/lifepointchurchnc",
-  },
-  {
-    name: "Church of the Highlands",
-    type: "church",
-    city: "Birmingham",
-    state: "AL",
-    website: "https://churchofthehighlands.com",
-    platform: "pushpay",
-  },
-  {
-    name: "Elevation Church",
-    type: "church",
-    city: "Charlotte",
-    state: "NC",
-    website: "https://elevationchurch.org",
-    platform: "pushpay",
-  },
-  {
-    name: "Bethel Church",
-    type: "church",
-    city: "Redding",
-    state: "CA",
-    website: "https://bethel.com",
-    platform: "subsplash",
-  },
-  {
-    name: "Hillsong Church",
-    type: "church",
-    city: "Sydney",
-    state: "AU",
-    website: "https://hillsong.com",
-    platform: "pushpay",
-  },
-  {
-    name: "Passion City Church",
-    type: "church",
-    city: "Atlanta",
-    state: "GA",
-    website: "https://passioncitychurch.com",
-    platform: "planning_center",
-    slug: "passioncity",
-  },
-  {
-    name: "The Village Church",
-    type: "church",
-    city: "Flower Mound",
-    state: "TX",
-    website: "https://thevillagechurch.net",
-    platform: "tithely",
-    slug: "the-village-church",
-  },
-  // Missions / Nonprofit
-  {
-    name: "Compassion International",
-    type: "missions",
-    website: "https://compassion.com",
-    platform: "compassion",
-    ein: "36-2423707",
-  },
-  {
-    name: "Samaritan's Purse",
-    type: "missions",
-    website: "https://samaritanspurse.org",
-    platform: "every_org",
-    slug: "samaritans-purse",
-    ein: "58-1437002",
-  },
-  {
-    name: "International Justice Mission",
-    type: "nonprofit",
-    website: "https://ijm.org",
-    platform: "every_org",
-    slug: "ijm",
-    ein: "54-1722887",
-  },
-  {
-    name: "Voice of the Martyrs",
-    type: "missions",
-    website: "https://persecution.com",
-    platform: "every_org",
-    slug: "vom",
-    ein: "73-1395057",
-  },
-  {
-    name: "GiveDirectly",
-    type: "nonprofit",
-    website: "https://givedirectly.org",
-    platform: "give_directly",
-    ein: "27-1661997",
-  },
-  {
-    name: "World Vision",
-    type: "missions",
-    website: "https://worldvision.org",
-    platform: "every_org",
-    slug: "world-vision",
-    ein: "95-1922279",
-  },
+  { name: "Compassion International", type: "nonprofit", city: "Colorado Springs", state: "CO", platform: "stripe_direct", website: "https://compassion.com", donateUrl: "https://compassion.com/donate" },
+  { name: "World Vision", type: "nonprofit", city: "Federal Way", state: "WA", platform: "stripe_direct", website: "https://worldvision.org", donateUrl: "https://donate.worldvision.org" },
+  { name: "Samaritan's Purse", type: "nonprofit", city: "Boone", state: "NC", platform: "stripe_direct", website: "https://samaritanspurse.org", donateUrl: "https://samaritanspurse.org/donate" },
+  { name: "International Justice Mission", type: "missions", city: "Washington", state: "DC", platform: "stripe_direct", website: "https://ijm.org", donateUrl: "https://ijm.org/donate" },
+  { name: "Cru", type: "missions", city: "Orlando", state: "FL", platform: "stripe_direct", website: "https://cru.org", donateUrl: "https://give.cru.org" },
+  { name: "Wycliffe Bible Translators", type: "missions", city: "Orlando", state: "FL", platform: "stripe_direct", website: "https://wycliffe.org", donateUrl: "https://wycliffe.org/donate" },
+  { name: "Young Life", type: "missions", city: "Colorado Springs", state: "CO", platform: "stripe_direct", website: "https://younglife.org", donateUrl: "https://younglife.org/donate" },
+  { name: "The Navigators", type: "missions", city: "Colorado Springs", state: "CO", platform: "stripe_direct", website: "https://navigators.org", donateUrl: "https://navigators.org/donate" },
 ];
 
-export function buildDonateUrl(entry: DirectoryEntry): string | null {
-  if (entry.donateUrl) return entry.donateUrl;
-  const platform = PLATFORM_BY_ID[entry.platform];
-  if (platform.urlPattern && entry.slug) {
-    return platform.urlPattern.replace("{slug}", entry.slug);
-  }
-  return platform.homepage || null;
-}
+// Backward-compat aliases for older imports.
+export const GIVING_PLATFORMS = Object.fromEntries(
+  PLATFORMS.map((p) => [p.id, p.name])
+) as Record<PlatformId, string>;
+export type GivingPlatform = PlatformId;

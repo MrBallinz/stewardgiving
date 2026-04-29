@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import Recipients from "./pages/Recipients";
 import Covenant from "./pages/Covenant";
 import Report from "./pages/Report";
+import Review from "./pages/Review";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Legal from "./pages/Legal";
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/recipients" element={<RequireAuth><Recipients /></RequireAuth>} />
           <Route path="/covenant" element={<RequireAuth><Covenant /></RequireAuth>} />
           <Route path="/report" element={<RequireAuth><Report /></RequireAuth>} />
+          <Route path="/review/:summary_id" element={<RequireAuth><Review /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
           <Route path="/legal" element={<Legal />} />
           <Route path="/privacy" element={<Privacy />} />
