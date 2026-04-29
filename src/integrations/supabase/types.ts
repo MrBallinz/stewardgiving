@@ -87,6 +87,12 @@ export type Database = {
           type: Database["public"]["Enums"]["recipient_type"]
           updated_at: string
           user_id: string
+          verification_notes: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_ein: string | null
+          verified_logo_url: string | null
+          verified_name: string | null
           website: string | null
         }
         Insert: {
@@ -101,6 +107,12 @@ export type Database = {
           type?: Database["public"]["Enums"]["recipient_type"]
           updated_at?: string
           user_id: string
+          verification_notes?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_ein?: string | null
+          verified_logo_url?: string | null
+          verified_name?: string | null
           website?: string | null
         }
         Update: {
@@ -115,6 +127,12 @@ export type Database = {
           type?: Database["public"]["Enums"]["recipient_type"]
           updated_at?: string
           user_id?: string
+          verification_notes?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_ein?: string | null
+          verified_logo_url?: string | null
+          verified_name?: string | null
           website?: string | null
         }
         Relationships: []

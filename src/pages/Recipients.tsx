@@ -21,12 +21,13 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { formatPercent } from "@/lib/format";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { Plus, Pencil, Trash2, AlertTriangle, ExternalLink, Search, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle, ExternalLink, Search, Sparkles, ShieldCheck, ShieldAlert, ShieldQuestion, Loader2 } from "lucide-react";
 import {
   PLATFORMS, PLATFORM_BY_ID, DIRECTORY, buildDonateUrl, type PlatformId, type DirectoryEntry,
 } from "@/lib/giving-platforms";
 
 type RecipientType = "church" | "missions" | "nonprofit" | "other";
+type VerificationStatus = "unverified" | "verified" | "review" | "failed";
 type Recipient = {
   id: string;
   name: string;
@@ -37,6 +38,12 @@ type Recipient = {
   platform_slug: string | null;
   donate_url: string | null;
   website: string | null;
+  verification_status: VerificationStatus;
+  verified_at: string | null;
+  verified_name: string | null;
+  verified_logo_url: string | null;
+  verified_ein: string | null;
+  verification_notes: string | null;
 };
 
 const TYPE_LABEL: Record<RecipientType, string> = {
@@ -44,6 +51,19 @@ const TYPE_LABEL: Record<RecipientType, string> = {
 };
 
 const PIE_COLORS = ["hsl(217 51% 12%)", "hsl(41 47% 59%)", "hsl(217 30% 35%)", "hsl(41 30% 45%)", "hsl(217 20% 55%)", "hsl(38 25% 70%)"];
+
+const verificationBadge = (status: VerificationStatus) => {
+  switch (status) {
+    case "verified":
+      return { icon: <ShieldCheck className="h-3 w-3" />, label: "Verified", className: "border-success/40 text-success bg-success/5" };
+    case "review":
+      return { icon: <ShieldQuestion className="h-3 w-3" />, label: "Needs review", className: "border-gold/50 text-foreground bg-gold-soft/40" };
+    case "failed":
+      return { icon: <ShieldAlert className="h-3 w-3" />, label: "Unverified", className: "border-destructive/40 text-destructive bg-destructive/5" };
+    default:
+      return { icon: <ShieldQuestion className="h-3 w-3" />, label: "Unverified", className: "border-border text-muted-foreground" };
+  }
+};
 
 const Recipients = () => {
   const { user } = useAuth();
@@ -55,12 +75,14 @@ const Recipients = () => {
   const total = useMemo(() => items.reduce((a, r) => a + Number(r.allocation_percent), 0), [items]);
   const balanced = Math.abs(total - 100) < 0.05;
 
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
   const refresh = async () => {
     if (!user) return;
     setLoading(true);
     const { data } = await supabase
       .from("giving_recipients")
-      .select("id, name, type, allocation_percent, ein, platform, platform_slug, donate_url, website")
+      .select("id, name, type, allocation_percent, ein, platform, platform_slug, donate_url, website, verification_status, verified_at, verified_name, verified_logo_url, verified_ein, verification_notes")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true });
     setItems((data as Recipient[]) ?? []);
@@ -73,6 +95,25 @@ const Recipients = () => {
     const { error } = await supabase.from("giving_recipients").delete().eq("id", id);
     if (error) return toast({ title: "Couldn't delete", description: error.message, variant: "destructive" });
     toast({ title: "Recipient removed" });
+    refresh();
+  };
+
+  const verify = async (r: Recipient) => {
+    if (!r.website && !r.donate_url) {
+      return toast({ title: "Add a website or donate URL first", variant: "destructive" });
+    }
+    setVerifyingId(r.id);
+    const { data, error } = await supabase.functions.invoke("verify-recipient", {
+      body: { recipient_id: r.id },
+    });
+    setVerifyingId(null);
+    if (error) return toast({ title: "Verification failed", description: error.message, variant: "destructive" });
+    const status = (data as { status?: string })?.status;
+    toast({
+      title: status === "verified" ? "Recipient verified" : status === "review" ? "Needs review" : "Could not verify",
+      description: (data as { verification_notes?: string })?.verification_notes ?? undefined,
+      variant: status === "failed" ? "destructive" : "default",
+    });
     refresh();
   };
 
@@ -120,16 +161,25 @@ const Recipients = () => {
                 const link = r.donate_url || (r.platform && r.platform_slug
                   ? buildDonateUrl({ name: r.name, type: r.type === "other" ? "nonprofit" : r.type, platform: r.platform, slug: r.platform_slug })
                   : null);
+                const vBadge = verificationBadge(r.verification_status);
+                const isVerifying = verifyingId === r.id;
                 return (
                   <div key={r.id} className="p-5 flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    {r.verified_logo_url ? (
+                      <img src={r.verified_logo_url} alt="" className="h-10 w-10 rounded-lg shrink-0 object-contain bg-card border border-border/60 p-1" />
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium truncate">{r.name}</p>
+                        <p className="font-medium truncate">{r.verified_name || r.name}</p>
                         <Badge variant="outline" className="text-xs font-normal">{TYPE_LABEL[r.type]}</Badge>
                         {platform && (
                           <Badge variant="secondary" className="text-xs font-normal">via {platform.name}</Badge>
                         )}
+                        <Badge variant="outline" className={`text-xs font-normal inline-flex items-center gap-1 ${vBadge.className}`}>
+                          {vBadge.icon}{vBadge.label}
+                        </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground truncate">
                         {link ? (
@@ -137,12 +187,23 @@ const Recipients = () => {
                             Donate page <ExternalLink className="h-3 w-3" />
                           </a>
                         ) : r.ein ? `EIN ${r.ein}` : "No giving link on file"}
+                        {r.verification_notes && (
+                          <span className="ml-2 text-xs text-destructive/80">· {r.verification_notes}</span>
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="stat-number text-2xl font-semibold">{formatPercent(r.allocation_percent)}</p>
                     </div>
                     <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost" size="icon"
+                        title="Verify recipient"
+                        disabled={isVerifying || (!r.website && !r.donate_url)}
+                        onClick={() => verify(r)}
+                      >
+                        {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
