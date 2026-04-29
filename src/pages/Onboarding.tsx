@@ -240,23 +240,22 @@ const Onboarding = () => {
 
         {step === 4 && (
           <Card className="p-8 shadow-card border-border/60 animate-fade-up">
-            <p className="text-sm font-medium text-gold uppercase tracking-wider mb-2">Connect your bank</p>
-            <h1 className="font-serif text-3xl font-semibold mb-2">One last step.</h1>
+            <p className="text-sm font-medium text-gold uppercase tracking-wider mb-2">You're ready</p>
+            <h1 className="font-serif text-3xl font-semibold mb-2">Step in with clear eyes.</h1>
             <p className="text-muted-foreground mb-8">
-              Read-only access to your business account so we can compute monthly profit. We never store funds and never move money without your approval.
+              Your dashboard starts empty. As you record monthly profit, we'll compute your covenant giving and build your year-end report. Bank connections (Plaid) and automated transfers are on our roadmap — for now, you'll log monthly numbers yourself.
             </p>
 
             <div className="rounded-xl border border-border bg-muted/40 p-6 flex items-start gap-4 mb-8">
               <div className="h-10 w-10 rounded-lg bg-gold-soft grid place-items-center shrink-0">
-                <Banknote className="h-5 w-5 text-foreground" />
+                <Sparkles className="h-5 w-5 text-foreground" />
               </div>
               <div className="flex-1">
-                <p className="font-medium">Connect with Plaid</p>
+                <p className="font-medium">Want to explore with sample data first?</p>
                 <p className="text-sm text-muted-foreground">
-                  Bank-grade encryption. Read-only. {minimum > 0 ? `Minimum giving: ${formatCurrency(minimum)}.` : ""}
+                  Try the interactive demo at <strong>/demo</strong> — it shows what Steward looks like with a year of activity, without touching your real account.
                 </p>
               </div>
-              <Check className="h-5 w-5 text-success mt-2" />
             </div>
 
             <p className="scripture text-sm mb-8">
@@ -266,6 +265,12 @@ const Onboarding = () => {
             <div className="flex justify-between">
               <Button variant="ghost" onClick={back}>Back</Button>
               <Button onClick={finish} disabled={busy} size="lg" className="bg-gold text-gold-foreground hover:bg-gold/90">
+                {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Enter Steward <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </Card>
+        )}
                 {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Enter Steward <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
