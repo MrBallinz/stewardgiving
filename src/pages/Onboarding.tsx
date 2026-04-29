@@ -11,8 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/AppShell";
+import { ChurchSearch, type ChurchRow } from "@/components/ChurchSearch";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, ArrowRight, Sparkles } from "lucide-react";
+import { Loader2, ArrowRight, Sparkles, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { formatPercent } from "@/lib/format";
 
 const DEFAULT_SCRIPTURE =
@@ -32,6 +34,7 @@ const Onboarding = () => {
   const [minimum, setMinimum] = useState(0);
   const [scripture, setScripture] = useState(DEFAULT_SCRIPTURE);
   // Step 3
+  const [pickedChurch, setPickedChurch] = useState<ChurchRow | null>(null);
   const [recipientName, setRecipientName] = useState("");
   const [recipientType, setRecipientType] = useState<"church" | "missions" | "nonprofit" | "other">("church");
   const [recipientEin, setRecipientEin] = useState("");
@@ -80,7 +83,7 @@ const Onboarding = () => {
   const saveStep3 = async () => {
     if (!user) return;
     if (!recipientName.trim()) {
-      toast({ title: "Add a recipient name", variant: "destructive" });
+      toast({ title: "Pick a church or add a recipient name", variant: "destructive" });
       return;
     }
     setBusy(true);
@@ -90,6 +93,10 @@ const Onboarding = () => {
       type: recipientType,
       allocation_percent: 100,
       ein: recipientEin.trim() || null,
+      church_id: pickedChurch?.id ?? null,
+      website: pickedChurch?.website ?? null,
+      donate_url: pickedChurch?.giving_url ?? null,
+      platform: (pickedChurch?.giving_platform as any) ?? null,
     });
     setBusy(false);
     if (error) return toast({ title: "Couldn't save recipient", description: error.message, variant: "destructive" });
@@ -206,8 +213,39 @@ const Onboarding = () => {
 
             <div className="space-y-5">
               <div className="space-y-2">
+                <Label>Find your church</Label>
+                <ChurchSearch
+                  autoFocus
+                  onSelect={(c) => {
+                    setPickedChurch(c);
+                    setRecipientName(c.dba_name ?? c.legal_name);
+                    setRecipientEin(c.ein ?? "");
+                    setRecipientType("church");
+                  }}
+                />
+                {pickedChurch && (
+                  <div className="flex items-start gap-2 rounded-md border border-success/30 bg-success/5 p-3 text-sm">
+                    <Check className="h-4 w-4 text-success mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{pickedChurch.dba_name ?? pickedChurch.legal_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {[pickedChurch.city, pickedChurch.state].filter(Boolean).join(", ")}
+                        {pickedChurch.giving_platform ? ` · gives via ${pickedChurch.giving_platform}` : ""}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] shrink-0">Linked</Badge>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/60" /></div>
+                <div className="relative flex justify-center text-[10px] uppercase tracking-wider"><span className="bg-card px-2 text-muted-foreground">Or enter manually</span></div>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="rn">Name</Label>
-                <Input id="rn" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Grace Community Church" maxLength={120} />
+                <Input id="rn" value={recipientName} onChange={(e) => { setRecipientName(e.target.value); setPickedChurch(null); }} placeholder="Grace Community Church" maxLength={120} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="rt">Type</Label>

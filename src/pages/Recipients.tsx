@@ -23,8 +23,9 @@ import { formatPercent } from "@/lib/format";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Plus, Pencil, Trash2, AlertTriangle, ExternalLink, Search, Sparkles, ShieldCheck, ShieldAlert, ShieldQuestion, Loader2 } from "lucide-react";
 import {
-  PLATFORMS, PLATFORM_BY_ID, DIRECTORY, buildDonateUrl, type PlatformId, type DirectoryEntry,
+  PLATFORMS, PLATFORM_BY_ID, buildDonateUrl, type PlatformId,
 } from "@/lib/giving-platforms";
+import { ChurchSearch, type ChurchRow } from "@/components/ChurchSearch";
 
 type RecipientType = "church" | "missions" | "nonprofit" | "other";
 type VerificationStatus = "unverified" | "verified" | "review" | "failed";
@@ -288,7 +289,7 @@ const RecipientDialog = ({
   const [platformSlug, setPlatformSlug] = useState("");
   const [donateUrl, setDonateUrl] = useState("");
   const [website, setWebsite] = useState("");
-  const [search, setSearch] = useState("");
+  const [churchId, setChurchId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -301,30 +302,18 @@ const RecipientDialog = ({
       setPlatformSlug(editing?.platform_slug ?? "");
       setDonateUrl(editing?.donate_url ?? "");
       setWebsite(editing?.website ?? "");
-      setSearch("");
+      setChurchId(null);
     }
   }, [open, editing]);
 
-  const matches: DirectoryEntry[] = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q || editing) return [];
-    return DIRECTORY.filter((d) =>
-      d.name.toLowerCase().includes(q) ||
-      d.city?.toLowerCase().includes(q) ||
-      d.website?.toLowerCase().includes(q)
-    ).slice(0, 6);
-  }, [search, editing]);
-
-  const applyDirectoryEntry = (d: DirectoryEntry) => {
-    setName(d.name);
-    setType(d.type);
-    setPlatform(d.platform);
-    setPlatformSlug(d.slug ?? "");
-    setDonateUrl(d.donateUrl ?? "");
-    setWebsite(d.website ?? "");
-    setEin(d.ein ?? "");
-    setSearch("");
-    toast({ title: `Loaded ${d.name}`, description: `Giving via ${PLATFORM_BY_ID[d.platform].name}.` });
+  const applyChurch = (c: ChurchRow) => {
+    setName(c.dba_name ?? c.legal_name);
+    setChurchId(c.id);
+    setEin(c.ein ?? "");
+    setWebsite(c.website ?? "");
+    setDonateUrl(c.giving_url ?? "");
+    if (c.giving_platform) setPlatform(c.giving_platform as PlatformId);
+    toast({ title: `Loaded ${c.dba_name ?? c.legal_name}` });
   };
 
   const previewUrl = useMemo(() => {
@@ -350,6 +339,7 @@ const RecipientDialog = ({
       platform_slug: platformSlug.trim() || null,
       donate_url: donateUrl.trim() || null,
       website: website.trim() || null,
+      church_id: churchId,
     };
     const { error } = editing
       ? await supabase.from("giving_recipients").update(payload).eq("id", editing.id)
@@ -373,38 +363,12 @@ const RecipientDialog = ({
 
         {!editing && (
           <div className="space-y-2">
-            <Label htmlFor="r-search" className="flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-accent" /> Quick find
+            <Label className="flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-accent" /> Search the Steward directory
             </Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="r-search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Try 'Lifepoint', 'Compassion', 'IJM'…"
-                className="pl-9"
-              />
-            </div>
-            {matches.length > 0 && (
-              <Card className="border-border/60 divide-y divide-border/60 max-h-56 overflow-y-auto">
-                {matches.map((d) => (
-                  <button
-                    key={d.name}
-                    type="button"
-                    onClick={() => applyDirectoryEntry(d)}
-                    className="w-full text-left p-3 hover:bg-muted/50 transition flex items-start justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm truncate">{d.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {d.city ? `${d.city}, ${d.state} · ` : ""}via {PLATFORM_BY_ID[d.platform].name}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="text-[10px] shrink-0">{TYPE_LABEL[d.type]}</Badge>
-                  </button>
-                ))}
-              </Card>
+            <ChurchSearch onSelect={applyChurch} placeholder="Search by church name and city" />
+            {churchId && (
+              <p className="text-xs text-success">Linked to directory entry. Verification stays in sync.</p>
             )}
           </div>
         )}
