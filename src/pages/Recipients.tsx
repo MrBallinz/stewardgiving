@@ -21,7 +21,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { formatPercent } from "@/lib/format";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { Plus, Pencil, Trash2, AlertTriangle, ExternalLink, Search, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle, ExternalLink, Search, Sparkles, ShieldCheck, ShieldAlert, ShieldQuestion, Loader2 } from "lucide-react";
 import {
   PLATFORMS, PLATFORM_BY_ID, DIRECTORY, buildDonateUrl, type PlatformId, type DirectoryEntry,
 } from "@/lib/giving-platforms";
