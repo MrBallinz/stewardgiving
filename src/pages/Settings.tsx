@@ -163,12 +163,16 @@ const Settings = () => {
                 <p className="text-sm text-muted-foreground">Change your sign-in password. (Not applicable for Google sign-in.)</p>
               </div>
               <div className="space-y-2">
+                <Label htmlFor="cp">Current password</Label>
+                <Input id="cp" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="np">New password</Label>
                 <Input id="np" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
                 <p className="text-xs text-muted-foreground">At least 8 characters.</p>
               </div>
               <div className="flex justify-end">
-                <Button onClick={changePassword} disabled={savingPassword || !newPassword}>
+                <Button onClick={changePassword} disabled={savingPassword || !newPassword || !currentPassword}>
                   {savingPassword && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Update password
                 </Button>
