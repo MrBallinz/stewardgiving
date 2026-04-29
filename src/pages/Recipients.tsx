@@ -148,16 +148,25 @@ const Recipients = () => {
                 const link = r.donate_url || (r.platform && r.platform_slug
                   ? buildDonateUrl({ name: r.name, type: r.type === "other" ? "nonprofit" : r.type, platform: r.platform, slug: r.platform_slug })
                   : null);
+                const vBadge = verificationBadge(r.verification_status);
+                const isVerifying = verifyingId === r.id;
                 return (
                   <div key={r.id} className="p-5 flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    {r.verified_logo_url ? (
+                      <img src={r.verified_logo_url} alt="" className="h-10 w-10 rounded-lg shrink-0 object-contain bg-card border border-border/60 p-1" />
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium truncate">{r.name}</p>
+                        <p className="font-medium truncate">{r.verified_name || r.name}</p>
                         <Badge variant="outline" className="text-xs font-normal">{TYPE_LABEL[r.type]}</Badge>
                         {platform && (
                           <Badge variant="secondary" className="text-xs font-normal">via {platform.name}</Badge>
                         )}
+                        <Badge variant="outline" className={`text-xs font-normal inline-flex items-center gap-1 ${vBadge.className}`}>
+                          {vBadge.icon}{vBadge.label}
+                        </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground truncate">
                         {link ? (
@@ -165,12 +174,23 @@ const Recipients = () => {
                             Donate page <ExternalLink className="h-3 w-3" />
                           </a>
                         ) : r.ein ? `EIN ${r.ein}` : "No giving link on file"}
+                        {r.verification_notes && (
+                          <span className="ml-2 text-xs text-destructive/80">· {r.verification_notes}</span>
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="stat-number text-2xl font-semibold">{formatPercent(r.allocation_percent)}</p>
                     </div>
                     <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost" size="icon"
+                        title="Verify recipient"
+                        disabled={isVerifying || (!r.website && !r.donate_url)}
+                        onClick={() => verify(r)}
+                      >
+                        {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
