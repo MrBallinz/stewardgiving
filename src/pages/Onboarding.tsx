@@ -270,13 +270,6 @@ const Onboarding = () => {
               </Button>
             </div>
           </Card>
-        )}
-                {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Enter Steward <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          </Card>
-        )}
       </div>
     </div>
   );
