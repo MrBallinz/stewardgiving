@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           id: string
           institution_name: string
+          is_mock: boolean
           plaid_item_id: string | null
           user_id: string
         }
@@ -28,6 +29,7 @@ export type Database = {
           created_at?: string
           id?: string
           institution_name: string
+          is_mock?: boolean
           plaid_item_id?: string | null
           user_id: string
         }
@@ -36,6 +38,7 @@ export type Database = {
           created_at?: string
           id?: string
           institution_name?: string
+          is_mock?: boolean
           plaid_item_id?: string | null
           user_id?: string
         }
@@ -65,6 +68,128 @@ export type Database = {
           minute_window_start?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      church_corrections: {
+        Row: {
+          church_id: string
+          created_at: string
+          field_corrected: string
+          id: string
+          new_value: string | null
+          note: string | null
+          old_value: string | null
+          user_id: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          field_corrected: string
+          id?: string
+          new_value?: string | null
+          note?: string | null
+          old_value?: string | null
+          user_id: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          field_corrected?: string
+          id?: string
+          new_value?: string | null
+          note?: string | null
+          old_value?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "church_corrections_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      churches: {
+        Row: {
+          approved_by_admin_id: string | null
+          city: string | null
+          created_at: string
+          dba_name: string | null
+          denomination: string | null
+          ein: string | null
+          enrichment_status: string
+          giving_platform: string | null
+          giving_url: string | null
+          google_place_id: string | null
+          id: string
+          last_verified_at: string | null
+          legal_name: string
+          ntee_code: string | null
+          phone: string | null
+          source_type: string
+          source_url: string | null
+          state: string | null
+          street: string | null
+          submitted_by_user_id: string | null
+          updated_at: string
+          verification_status: string
+          website: string | null
+          zip: string | null
+        }
+        Insert: {
+          approved_by_admin_id?: string | null
+          city?: string | null
+          created_at?: string
+          dba_name?: string | null
+          denomination?: string | null
+          ein?: string | null
+          enrichment_status?: string
+          giving_platform?: string | null
+          giving_url?: string | null
+          google_place_id?: string | null
+          id?: string
+          last_verified_at?: string | null
+          legal_name: string
+          ntee_code?: string | null
+          phone?: string | null
+          source_type?: string
+          source_url?: string | null
+          state?: string | null
+          street?: string | null
+          submitted_by_user_id?: string | null
+          updated_at?: string
+          verification_status?: string
+          website?: string | null
+          zip?: string | null
+        }
+        Update: {
+          approved_by_admin_id?: string | null
+          city?: string | null
+          created_at?: string
+          dba_name?: string | null
+          denomination?: string | null
+          ein?: string | null
+          enrichment_status?: string
+          giving_platform?: string | null
+          giving_url?: string | null
+          google_place_id?: string | null
+          id?: string
+          last_verified_at?: string | null
+          legal_name?: string
+          ntee_code?: string | null
+          phone?: string | null
+          source_type?: string
+          source_url?: string | null
+          state?: string | null
+          street?: string | null
+          submitted_by_user_id?: string | null
+          updated_at?: string
+          verification_status?: string
+          website?: string | null
+          zip?: string | null
         }
         Relationships: []
       }
@@ -104,11 +229,16 @@ export type Database = {
       giving_recipients: {
         Row: {
           allocation_percent: number
+          church_id: string | null
           created_at: string
+          custom_ein: string | null
+          custom_name: string | null
           donate_url: string | null
           ein: string | null
+          giving_method: string
           id: string
           name: string
+          notes: string | null
           platform: string | null
           platform_slug: string | null
           type: Database["public"]["Enums"]["recipient_type"]
@@ -124,11 +254,16 @@ export type Database = {
         }
         Insert: {
           allocation_percent?: number
+          church_id?: string | null
           created_at?: string
+          custom_ein?: string | null
+          custom_name?: string | null
           donate_url?: string | null
           ein?: string | null
+          giving_method?: string
           id?: string
           name: string
+          notes?: string | null
           platform?: string | null
           platform_slug?: string | null
           type?: Database["public"]["Enums"]["recipient_type"]
@@ -144,11 +279,16 @@ export type Database = {
         }
         Update: {
           allocation_percent?: number
+          church_id?: string | null
           created_at?: string
+          custom_ein?: string | null
+          custom_name?: string | null
           donate_url?: string | null
           ein?: string | null
+          giving_method?: string
           id?: string
           name?: string
+          notes?: string | null
           platform?: string | null
           platform_slug?: string | null
           type?: Database["public"]["Enums"]["recipient_type"]
@@ -169,7 +309,10 @@ export type Database = {
           amount: number
           created_at: string
           id: string
+          is_sample: boolean
+          marked_paid_at: string | null
           monthly_summary_id: string
+          payment_method: string | null
           recipient_id: string
           status: Database["public"]["Enums"]["transaction_status"]
           transferred_at: string | null
@@ -178,7 +321,10 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          is_sample?: boolean
+          marked_paid_at?: string | null
           monthly_summary_id: string
+          payment_method?: string | null
           recipient_id: string
           status?: Database["public"]["Enums"]["transaction_status"]
           transferred_at?: string | null
@@ -187,7 +333,10 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          is_sample?: boolean
+          marked_paid_at?: string | null
           monthly_summary_id?: string
+          payment_method?: string | null
           recipient_id?: string
           status?: Database["public"]["Enums"]["transaction_status"]
           transferred_at?: string | null
@@ -215,8 +364,11 @@ export type Database = {
           giving_amount: number
           giving_percent: number
           id: string
+          is_sample: boolean
           month: string
           net_profit: number
+          reviewed_at: string | null
+          source: string
           status: Database["public"]["Enums"]["summary_status"]
           total_expenses: number
           total_revenue: number
@@ -227,8 +379,11 @@ export type Database = {
           giving_amount?: number
           giving_percent?: number
           id?: string
+          is_sample?: boolean
           month: string
           net_profit?: number
+          reviewed_at?: string | null
+          source?: string
           status?: Database["public"]["Enums"]["summary_status"]
           total_expenses?: number
           total_revenue?: number
@@ -239,8 +394,11 @@ export type Database = {
           giving_amount?: number
           giving_percent?: number
           id?: string
+          is_sample?: boolean
           month?: string
           net_profit?: number
+          reviewed_at?: string | null
+          source?: string
           status?: Database["public"]["Enums"]["summary_status"]
           total_expenses?: number
           total_revenue?: number
@@ -275,6 +433,48 @@ export type Database = {
           id?: string
           onboarded?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          id: string
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier: string | null
+          trial_end: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string | null
+          trial_end?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: string | null
+          trial_end?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
