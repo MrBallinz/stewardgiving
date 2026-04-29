@@ -275,7 +275,7 @@ const Landing = () => {
                 ))}
               </ul>
               <Button asChild variant={p.highlighted ? "default" : "outline"} className="w-full">
-                <Link to="/auth">Start free trial</Link>
+                <Link to="/auth">Get started free</Link>
               </Button>
             </Card>
           ))}
