@@ -27,6 +27,7 @@ import {
 } from "@/lib/giving-platforms";
 
 type RecipientType = "church" | "missions" | "nonprofit" | "other";
+type VerificationStatus = "unverified" | "verified" | "review" | "failed";
 type Recipient = {
   id: string;
   name: string;
@@ -37,6 +38,12 @@ type Recipient = {
   platform_slug: string | null;
   donate_url: string | null;
   website: string | null;
+  verification_status: VerificationStatus;
+  verified_at: string | null;
+  verified_name: string | null;
+  verified_logo_url: string | null;
+  verified_ein: string | null;
+  verification_notes: string | null;
 };
 
 const TYPE_LABEL: Record<RecipientType, string> = {
