@@ -34,6 +34,7 @@ const Onboarding = () => {
   const [minimum, setMinimum] = useState(0);
   const [scripture, setScripture] = useState(DEFAULT_SCRIPTURE);
   // Step 3
+  const [pickedChurch, setPickedChurch] = useState<ChurchRow | null>(null);
   const [recipientName, setRecipientName] = useState("");
   const [recipientType, setRecipientType] = useState<"church" | "missions" | "nonprofit" | "other">("church");
   const [recipientEin, setRecipientEin] = useState("");
