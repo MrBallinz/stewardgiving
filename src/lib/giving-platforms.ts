@@ -16,7 +16,7 @@ export type PlatformId =
   | "every_org"
   | "unknown";
 
-export type PlatformCategory = "church" | "nonprofit" | "generic";
+export type PlatformCategory = "Church" | "Missions / Nonprofit" | "Direct";
 
 export type Platform = {
   id: PlatformId;
@@ -27,42 +27,42 @@ export type Platform = {
 };
 
 export const PLATFORMS: Platform[] = [
-  { id: "tithely", name: "Tithe.ly", category: "church",
+  { id: "tithely", name: "Tithe.ly", category: "Church",
     description: "Popular giving platform for churches.",
     urlPattern: "https://tithe.ly/give?c={slug}" },
-  { id: "pushpay", name: "Pushpay", category: "church",
+  { id: "pushpay", name: "Pushpay", category: "Church",
     description: "Used by larger congregations.",
     urlPattern: "https://pushpay.com/g/{slug}" },
-  { id: "givelify", name: "Givelify", category: "church",
+  { id: "givelify", name: "Givelify", category: "Church",
     description: "Mobile-first giving app.",
     urlPattern: "https://www.givelify.com/donate/{slug}" },
-  { id: "anedot", name: "Anedot", category: "church",
+  { id: "anedot", name: "Anedot", category: "Church",
     description: "Donation processor for churches and nonprofits.",
     urlPattern: "https://anedot.com/{slug}" },
-  { id: "subsplash", name: "Subsplash", category: "church",
+  { id: "subsplash", name: "Subsplash", category: "Church",
     description: "Church platform with built-in giving.",
     urlPattern: "https://subsplash.com/+{slug}/give" },
-  { id: "vanco", name: "Vanco", category: "church",
+  { id: "vanco", name: "Vanco", category: "Church",
     description: "Faith-based payment processor.",
     urlPattern: "https://secure.myvanco.com/{slug}" },
-  { id: "churchtrac", name: "ChurchTrac", category: "church",
+  { id: "churchtrac", name: "ChurchTrac", category: "Church",
     description: "Church management with giving.",
     urlPattern: "https://www.churchtrac.com/{slug}" },
-  { id: "overflow", name: "Overflow", category: "church",
+  { id: "overflow", name: "Overflow", category: "Church",
     description: "Stock and crypto giving.",
     urlPattern: "https://overflow.co/give/{slug}" },
-  { id: "planning_center", name: "Planning Center", category: "church",
+  { id: "planning_center", name: "Planning Center", category: "Church",
     description: "Church management with Church Center giving.",
     urlPattern: "https://{slug}.churchcenter.com/giving" },
-  { id: "easytithe", name: "EasyTithe", category: "church",
+  { id: "easytithe", name: "EasyTithe", category: "Church",
     description: "Simple online giving.",
     urlPattern: "https://easytithe.com/{slug}" },
-  { id: "stripe_direct", name: "Direct (Stripe)", category: "nonprofit",
+  { id: "stripe_direct", name: "Direct (Stripe)", category: "Direct",
     description: "Org's own donation page (often Stripe-powered)." },
-  { id: "every_org", name: "every.org", category: "nonprofit",
+  { id: "every_org", name: "every.org", category: "Missions / Nonprofit",
     description: "Free 501(c)(3) donation routing.",
     urlPattern: "https://www.every.org/{slug}" },
-  { id: "unknown", name: "Unknown", category: "generic",
+  { id: "unknown", name: "Unknown", category: "Direct",
     description: "Platform not detected — manual instructions." },
 ];
 
@@ -98,21 +98,25 @@ export function buildDonateUrl(params: {
 // (Real church search now lives in <ChurchSearch /> backed by the churches table.)
 export type DirectoryEntry = {
   name: string;
+  type: "church" | "missions" | "nonprofit" | "other";
   city?: string;
   state?: string;
+  website?: string;
+  donateUrl?: string;
+  ein?: string;
   platform: PlatformId;
   slug?: string;
 };
 
 export const DIRECTORY: DirectoryEntry[] = [
-  { name: "Compassion International", city: "Colorado Springs", state: "CO", platform: "stripe_direct" },
-  { name: "World Vision", city: "Federal Way", state: "WA", platform: "stripe_direct" },
-  { name: "Samaritan's Purse", city: "Boone", state: "NC", platform: "stripe_direct" },
-  { name: "International Justice Mission", city: "Washington", state: "DC", platform: "stripe_direct" },
-  { name: "Cru", city: "Orlando", state: "FL", platform: "stripe_direct" },
-  { name: "Wycliffe Bible Translators", city: "Orlando", state: "FL", platform: "stripe_direct" },
-  { name: "Young Life", city: "Colorado Springs", state: "CO", platform: "stripe_direct" },
-  { name: "The Navigators", city: "Colorado Springs", state: "CO", platform: "stripe_direct" },
+  { name: "Compassion International", type: "nonprofit", city: "Colorado Springs", state: "CO", platform: "stripe_direct", website: "https://compassion.com", donateUrl: "https://compassion.com/donate" },
+  { name: "World Vision", type: "nonprofit", city: "Federal Way", state: "WA", platform: "stripe_direct", website: "https://worldvision.org", donateUrl: "https://donate.worldvision.org" },
+  { name: "Samaritan's Purse", type: "nonprofit", city: "Boone", state: "NC", platform: "stripe_direct", website: "https://samaritanspurse.org", donateUrl: "https://samaritanspurse.org/donate" },
+  { name: "International Justice Mission", type: "missions", city: "Washington", state: "DC", platform: "stripe_direct", website: "https://ijm.org", donateUrl: "https://ijm.org/donate" },
+  { name: "Cru", type: "missions", city: "Orlando", state: "FL", platform: "stripe_direct", website: "https://cru.org", donateUrl: "https://give.cru.org" },
+  { name: "Wycliffe Bible Translators", type: "missions", city: "Orlando", state: "FL", platform: "stripe_direct", website: "https://wycliffe.org", donateUrl: "https://wycliffe.org/donate" },
+  { name: "Young Life", type: "missions", city: "Colorado Springs", state: "CO", platform: "stripe_direct", website: "https://younglife.org", donateUrl: "https://younglife.org/donate" },
+  { name: "The Navigators", type: "missions", city: "Colorado Springs", state: "CO", platform: "stripe_direct", website: "https://navigators.org", donateUrl: "https://navigators.org/donate" },
 ];
 
 // Backward-compat aliases for older imports.
