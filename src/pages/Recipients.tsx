@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
@@ -21,7 +21,10 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { formatPercent } from "@/lib/format";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle, ExternalLink, Search, Sparkles } from "lucide-react";
+import {
+  PLATFORMS, PLATFORM_BY_ID, DIRECTORY, buildDonateUrl, type PlatformId, type DirectoryEntry,
+} from "@/lib/giving-platforms";
 
 type RecipientType = "church" | "missions" | "nonprofit" | "other";
 type Recipient = {
@@ -30,13 +33,16 @@ type Recipient = {
   type: RecipientType;
   allocation_percent: number;
   ein: string | null;
+  platform: PlatformId | null;
+  platform_slug: string | null;
+  donate_url: string | null;
+  website: string | null;
 };
 
 const TYPE_LABEL: Record<RecipientType, string> = {
   church: "Church", missions: "Missions", nonprofit: "Nonprofit", other: "Other",
 };
 
-// Steward palette: navy + gold + warm muted tones for the pie.
 const PIE_COLORS = ["hsl(217 51% 12%)", "hsl(41 47% 59%)", "hsl(217 30% 35%)", "hsl(41 30% 45%)", "hsl(217 20% 55%)", "hsl(38 25% 70%)"];
 
 const Recipients = () => {
@@ -54,7 +60,7 @@ const Recipients = () => {
     setLoading(true);
     const { data } = await supabase
       .from("giving_recipients")
-      .select("id, name, type, allocation_percent, ein")
+      .select("id, name, type, allocation_percent, ein, platform, platform_slug, donate_url, website")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true });
     setItems((data as Recipient[]) ?? []);
@@ -79,7 +85,7 @@ const Recipients = () => {
         <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
           <div>
             <h1 className="font-serif text-4xl font-semibold tracking-tight">Recipients</h1>
-            <p className="text-muted-foreground mt-1">Where your giving goes, and how it's split.</p>
+            <p className="text-muted-foreground mt-1">Where your giving goes, and how it's sent.</p>
           </div>
           <Button onClick={openAdd}>
             <Plus className="h-4 w-4 mr-2" />Add recipient
@@ -103,49 +109,62 @@ const Recipients = () => {
         ) : items.length === 0 ? (
           <Card className="p-12 text-center border-dashed">
             <p className="scripture text-lg mb-2">No giving yet — let's set up your first recipient.</p>
-            <p className="text-muted-foreground mb-6 text-sm">Add a church, missions org, or nonprofit to begin.</p>
+            <p className="text-muted-foreground mb-6 text-sm">Search a known church or add one manually.</p>
             <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />Add recipient</Button>
           </Card>
         ) : (
           <div className="grid md:grid-cols-[1fr,300px] gap-6">
             <Card className="shadow-card border-border/60 divide-y divide-border/60">
-              {items.map((r, i) => (
-                <div key={r.id} className="p-5 flex items-center gap-4">
-                  <div className="h-10 w-10 rounded-lg shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium truncate">{r.name}</p>
-                      <Badge variant="outline" className="text-xs font-normal">{TYPE_LABEL[r.type]}</Badge>
+              {items.map((r, i) => {
+                const platform = r.platform ? PLATFORM_BY_ID[r.platform] : null;
+                const link = r.donate_url || (r.platform && r.platform_slug
+                  ? buildDonateUrl({ name: r.name, type: r.type === "other" ? "nonprofit" : r.type, platform: r.platform, slug: r.platform_slug })
+                  : null);
+                return (
+                  <div key={r.id} className="p-5 flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-lg shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium truncate">{r.name}</p>
+                        <Badge variant="outline" className="text-xs font-normal">{TYPE_LABEL[r.type]}</Badge>
+                        {platform && (
+                          <Badge variant="secondary" className="text-xs font-normal">via {platform.name}</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {link ? (
+                          <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-foreground underline-offset-4 hover:underline">
+                            Donate page <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : r.ein ? `EIN ${r.ein}` : "No giving link on file"}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {r.ein ? `EIN ${r.ein}` : "No EIN on file"}
-                    </p>
+                    <div className="text-right">
+                      <p className="stat-number text-2xl font-semibold">{formatPercent(r.allocation_percent)}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remove {r.name}?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Past giving records to this recipient stay on your year-end report. You can always add them back later.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => remove(r.id)}>Remove</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="stat-number text-2xl font-semibold">{formatPercent(r.allocation_percent)}</p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remove {r.name}?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Past giving records to this recipient stay on your year-end report. You can always add them back later.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => remove(r.id)}>Remove</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               <div className="p-5 flex items-center justify-between bg-muted/30">
                 <span className="text-sm text-muted-foreground">Total allocation</span>
                 <span className={`stat-number text-xl font-semibold ${balanced ? "text-success" : "text-destructive"}`}>
@@ -204,6 +223,11 @@ const RecipientDialog = ({
   const [type, setType] = useState<RecipientType>("church");
   const [percent, setPercent] = useState<number>(0);
   const [ein, setEin] = useState("");
+  const [platform, setPlatform] = useState<PlatformId | "">("");
+  const [platformSlug, setPlatformSlug] = useState("");
+  const [donateUrl, setDonateUrl] = useState("");
+  const [website, setWebsite] = useState("");
+  const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -212,8 +236,43 @@ const RecipientDialog = ({
       setType(editing?.type ?? "church");
       setPercent(editing ? Number(editing.allocation_percent) : 0);
       setEin(editing?.ein ?? "");
+      setPlatform((editing?.platform as PlatformId) ?? "");
+      setPlatformSlug(editing?.platform_slug ?? "");
+      setDonateUrl(editing?.donate_url ?? "");
+      setWebsite(editing?.website ?? "");
+      setSearch("");
     }
   }, [open, editing]);
+
+  const matches: DirectoryEntry[] = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q || editing) return [];
+    return DIRECTORY.filter((d) =>
+      d.name.toLowerCase().includes(q) ||
+      d.city?.toLowerCase().includes(q) ||
+      d.website?.toLowerCase().includes(q)
+    ).slice(0, 6);
+  }, [search, editing]);
+
+  const applyDirectoryEntry = (d: DirectoryEntry) => {
+    setName(d.name);
+    setType(d.type);
+    setPlatform(d.platform);
+    setPlatformSlug(d.slug ?? "");
+    setDonateUrl(d.donateUrl ?? "");
+    setWebsite(d.website ?? "");
+    setEin(d.ein ?? "");
+    setSearch("");
+    toast({ title: `Loaded ${d.name}`, description: `Giving via ${PLATFORM_BY_ID[d.platform].name}.` });
+  };
+
+  const previewUrl = useMemo(() => {
+    if (donateUrl) return donateUrl;
+    if (platform && platformSlug) {
+      return buildDonateUrl({ name, type: type === "other" ? "nonprofit" : type, platform, slug: platformSlug });
+    }
+    return null;
+  }, [donateUrl, platform, platformSlug, name, type]);
 
   const save = async () => {
     if (!userId) return;
@@ -226,6 +285,10 @@ const RecipientDialog = ({
       type,
       allocation_percent: percent,
       ein: ein.trim() || null,
+      platform: platform || null,
+      platform_slug: platformSlug.trim() || null,
+      donate_url: donateUrl.trim() || null,
+      website: website.trim() || null,
     };
     const { error } = editing
       ? await supabase.from("giving_recipients").update(payload).eq("id", editing.id)
@@ -239,13 +302,52 @@ const RecipientDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">{editing ? "Edit recipient" : "Add recipient"}</DialogTitle>
           <DialogDescription>
-            Allocations across all your recipients should add up to 100%.
+            Search a known church or nonprofit, or enter one manually. Allocations should total 100%.
           </DialogDescription>
         </DialogHeader>
+
+        {!editing && (
+          <div className="space-y-2">
+            <Label htmlFor="r-search" className="flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-accent" /> Quick find
+            </Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="r-search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Try 'Lifepoint', 'Compassion', 'IJM'…"
+                className="pl-9"
+              />
+            </div>
+            {matches.length > 0 && (
+              <Card className="border-border/60 divide-y divide-border/60 max-h-56 overflow-y-auto">
+                {matches.map((d) => (
+                  <button
+                    key={d.name}
+                    type="button"
+                    onClick={() => applyDirectoryEntry(d)}
+                    className="w-full text-left p-3 hover:bg-muted/50 transition flex items-start justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{d.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {d.city ? `${d.city}, ${d.state} · ` : ""}via {PLATFORM_BY_ID[d.platform].name}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] shrink-0">{TYPE_LABEL[d.type]}</Badge>
+                  </button>
+                ))}
+              </Card>
+            )}
+          </div>
+        )}
+
         <div className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="r-name">Name</Label>
@@ -270,11 +372,69 @@ const RecipientDialog = ({
                 onChange={(e) => setPercent(Number(e.target.value) || 0)} />
             </div>
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="r-ein">EIN (optional)</Label>
-            <Input id="r-ein" value={ein} onChange={(e) => setEin(e.target.value)} maxLength={20} placeholder="12-3456789" />
-            <p className="text-xs text-muted-foreground">Used on your year-end stewardship report.</p>
+            <Label htmlFor="r-platform">Giving platform</Label>
+            <Select value={platform || "none"} onValueChange={(v) => setPlatform(v === "none" ? "" : (v as PlatformId))}>
+              <SelectTrigger id="r-platform"><SelectValue placeholder="How is the gift sent?" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— None / Not specified —</SelectItem>
+                {(["Church", "Missions / Nonprofit", "Direct"] as const).map((cat) => (
+                  <div key={cat}>
+                    <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">{cat}</div>
+                    {PLATFORMS.filter((p) => p.category === cat).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </div>
+                ))}
+              </SelectContent>
+            </Select>
+            {platform && (
+              <p className="text-xs text-muted-foreground">{PLATFORM_BY_ID[platform as PlatformId].description}</p>
+            )}
           </div>
+
+          {platform && PLATFORM_BY_ID[platform as PlatformId].urlPattern && (
+            <div className="space-y-2">
+              <Label htmlFor="r-slug">Platform handle</Label>
+              <Input
+                id="r-slug"
+                value={platformSlug}
+                onChange={(e) => setPlatformSlug(e.target.value)}
+                placeholder="e.g. lifepointchurchnc"
+              />
+              <p className="text-xs text-muted-foreground break-all">
+                {PLATFORM_BY_ID[platform as PlatformId].urlPattern?.replace("{slug}", platformSlug || "your-handle")}
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="r-url">Donate URL (optional override)</Label>
+            <Input id="r-url" value={donateUrl} onChange={(e) => setDonateUrl(e.target.value)} placeholder="https://donate.overflow.co/lifepointchurchnc" />
+          </div>
+
+          {previewUrl && (
+            <a href={previewUrl} target="_blank" rel="noreferrer"
+               className="flex items-center justify-between gap-2 p-3 rounded-md border border-gold/40 bg-gold-soft/30 text-sm hover:bg-gold-soft/50 transition">
+              <span className="truncate">Test donate link</span>
+              <ExternalLink className="h-4 w-4 shrink-0" />
+            </a>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="r-website">Website (optional)</Label>
+              <Input id="r-website" value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="r-ein">EIN (optional)</Label>
+              <Input id="r-ein" value={ein} onChange={(e) => setEin(e.target.value)} maxLength={20} placeholder="12-3456789" />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Steward records your gifts for your year-end report. The actual transfer is completed on the recipient's giving platform — we link you straight there.
+          </p>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
