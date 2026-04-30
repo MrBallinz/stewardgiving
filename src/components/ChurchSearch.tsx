@@ -62,14 +62,24 @@ export function ChurchSearch({ onSelect, onSubmitted, placeholder, autoFocus }: 
   const [highlight, setHighlight] = useState(0);
   const [submitOpen, setSubmitOpen] = useState(false);
   const debounceRef = useRef<number | null>(null);
+  const reqIdRef = useRef(0);
 
   useEffect(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     if (!query.trim()) { setResults([]); setLoading(false); return; }
     setLoading(true);
     debounceRef.current = window.setTimeout(async () => {
+      const myReqId = ++reqIdRef.current;
       const q = query.trim();
-      const like = `%${q}%`;
+      // PostgREST .or() treats commas/parens as separators. Escape by removing
+      // them from the user input for the LIKE pattern (they're not meaningful
+      // for name/city search anyway).
+      const safe = q.replace(/[,()*]/g, " ").replace(/\s+/g, " ").trim();
+      if (!safe) {
+        if (myReqId === reqIdRef.current) { setResults([]); setLoading(false); }
+        return;
+      }
+      const like = `%${safe}%`;
       const { data, error } = await supabase
         .from("churches")
         .select("id,legal_name,dba_name,city,state,denomination,website,giving_platform,giving_url,verification_status,ein")
@@ -82,6 +92,8 @@ export function ChurchSearch({ onSelect, onSubmitted, placeholder, autoFocus }: 
           ].join(",")
         )
         .limit(10);
+      // Drop stale responses.
+      if (myReqId !== reqIdRef.current) return;
       if (!error) setResults((data ?? []) as ChurchRow[]);
       setLoading(false);
     }, 300);
