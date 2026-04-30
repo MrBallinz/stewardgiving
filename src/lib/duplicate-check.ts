@@ -32,12 +32,20 @@ export type CandidateChurch = {
 export type DuplicateMatch = {
   id: string;
   legal_name: string;
+  dba_name: string | null;
   city: string | null;
   state: string | null;
+  denomination: string | null;
   website: string | null;
   giving_url: string | null;
+  giving_platform: string | null;
+  ein: string | null;
+  verification_status: string;
   reason: "name+city" | "website" | "giving_url";
 };
+
+const FULL_COLS =
+  "id,legal_name,dba_name,city,state,denomination,website,giving_url,giving_platform,ein,verification_status";
 
 export async function findPossibleDuplicates(
   c: CandidateChurch
@@ -51,14 +59,14 @@ export async function findPossibleDuplicates(
   if (c.city && c.state) {
     const { data } = await supabase
       .from("churches")
-      .select("id,legal_name,dba_name,city,state,website,giving_url")
+      .select(FULL_COLS)
       .eq("city", c.city)
       .eq("state", c.state)
       .limit(50);
-    for (const row of data ?? []) {
+    for (const row of (data ?? []) as any[]) {
       const candidates = [row.legal_name, row.dba_name].filter(Boolean) as string[];
       if (candidates.some((n) => normalize(n) === normName)) {
-        matches[row.id] = { ...row, reason: "name+city" };
+        matches[row.id] = { ...(row as any), reason: "name+city" };
       }
     }
   }
@@ -67,12 +75,12 @@ export async function findPossibleDuplicates(
   if (wd) {
     const { data } = await supabase
       .from("churches")
-      .select("id,legal_name,city,state,website,giving_url")
+      .select(FULL_COLS)
       .ilike("website", `%${wd}%`)
       .limit(20);
-    for (const row of data ?? []) {
+    for (const row of (data ?? []) as any[]) {
       if (domainOf(row.website) === wd && !matches[row.id]) {
-        matches[row.id] = { ...row, reason: "website" };
+        matches[row.id] = { ...(row as any), reason: "website" };
       }
     }
   }
@@ -81,12 +89,12 @@ export async function findPossibleDuplicates(
   if (gd) {
     const { data } = await supabase
       .from("churches")
-      .select("id,legal_name,city,state,website,giving_url")
+      .select(FULL_COLS)
       .ilike("giving_url", `%${gd}%`)
       .limit(20);
-    for (const row of data ?? []) {
+    for (const row of (data ?? []) as any[]) {
       if (domainOf(row.giving_url) === gd && !matches[row.id]) {
-        matches[row.id] = { ...row, reason: "giving_url" };
+        matches[row.id] = { ...(row as any), reason: "giving_url" };
       }
     }
   }

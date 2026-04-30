@@ -62,14 +62,24 @@ export function ChurchSearch({ onSelect, onSubmitted, placeholder, autoFocus }: 
   const [highlight, setHighlight] = useState(0);
   const [submitOpen, setSubmitOpen] = useState(false);
   const debounceRef = useRef<number | null>(null);
+  const reqIdRef = useRef(0);
 
   useEffect(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     if (!query.trim()) { setResults([]); setLoading(false); return; }
     setLoading(true);
     debounceRef.current = window.setTimeout(async () => {
+      const myReqId = ++reqIdRef.current;
       const q = query.trim();
-      const like = `%${q}%`;
+      // PostgREST .or() treats commas/parens as separators. Escape by removing
+      // them from the user input for the LIKE pattern (they're not meaningful
+      // for name/city search anyway).
+      const safe = q.replace(/[,()*]/g, " ").replace(/\s+/g, " ").trim();
+      if (!safe) {
+        if (myReqId === reqIdRef.current) { setResults([]); setLoading(false); }
+        return;
+      }
+      const like = `%${safe}%`;
       const { data, error } = await supabase
         .from("churches")
         .select("id,legal_name,dba_name,city,state,denomination,website,giving_platform,giving_url,verification_status,ein")
@@ -82,6 +92,8 @@ export function ChurchSearch({ onSelect, onSubmitted, placeholder, autoFocus }: 
           ].join(",")
         )
         .limit(10);
+      // Drop stale responses.
+      if (myReqId !== reqIdRef.current) return;
       if (!error) setResults((data ?? []) as ChurchRow[]);
       setLoading(false);
     }, 300);
@@ -228,8 +240,22 @@ function SubmitChurchDialog(props: {
       .insert(insert as any)
       .select("id,legal_name,dba_name,city,state,denomination,website,giving_platform,giving_url,verification_status,ein")
       .single();
+    if (error) {
+      setBusy(false);
+      return toast({ title: "Couldn't submit", description: error.message, variant: "destructive" });
+    }
+    // Persist optional notes as a church_correction so curators can review.
+    if (notes.trim() && data?.id) {
+      await supabase.from("church_corrections").insert({
+        church_id: data.id,
+        user_id: user.id,
+        field_corrected: "submission_note",
+        new_value: null,
+        old_value: null,
+        note: notes.trim().slice(0, 300),
+      } as any);
+    }
     setBusy(false);
-    if (error) return toast({ title: "Couldn't submit", description: error.message, variant: "destructive" });
     toast({ title: "Submitted", description: "Thanks — your church is now searchable for everyone." });
     onOpenChange(false);
     onSubmitted(data as ChurchRow);
@@ -259,7 +285,7 @@ function SubmitChurchDialog(props: {
                 <button
                   key={d.id}
                   type="button"
-                  onClick={() => onSubmitted({ ...d, dba_name: null, denomination: null, ein: null, giving_platform: null, verification_status: "community_submitted" } as ChurchRow)}
+                  onClick={() => onSubmitted(d as unknown as ChurchRow)}
                   className="w-full text-left p-2 rounded-md bg-card hover:bg-muted/60 border border-border/60 text-sm"
                 >
                   <p className="font-medium">{d.legal_name}</p>
