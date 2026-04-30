@@ -240,8 +240,22 @@ function SubmitChurchDialog(props: {
       .insert(insert as any)
       .select("id,legal_name,dba_name,city,state,denomination,website,giving_platform,giving_url,verification_status,ein")
       .single();
+    if (error) {
+      setBusy(false);
+      return toast({ title: "Couldn't submit", description: error.message, variant: "destructive" });
+    }
+    // Persist optional notes as a church_correction so curators can review.
+    if (notes.trim() && data?.id) {
+      await supabase.from("church_corrections").insert({
+        church_id: data.id,
+        user_id: user.id,
+        field_corrected: "submission_note",
+        new_value: null,
+        old_value: null,
+        note: notes.trim().slice(0, 300),
+      } as any);
+    }
     setBusy(false);
-    if (error) return toast({ title: "Couldn't submit", description: error.message, variant: "destructive" });
     toast({ title: "Submitted", description: "Thanks — your church is now searchable for everyone." });
     onOpenChange(false);
     onSubmitted(data as ChurchRow);
