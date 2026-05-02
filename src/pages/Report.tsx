@@ -37,7 +37,10 @@ const Report = () => {
       const [{ data: prof }, { data: cov }, { data: sums }, { data: recs }] = await Promise.all([
         supabase.from("profiles").select("business_name, full_name").eq("id", user.id).maybeSingle(),
         supabase.from("giving_covenants").select("scripture_anchor").eq("user_id", user.id).maybeSingle(),
-        supabase.from("monthly_summaries").select("*").eq("user_id", user.id).gte("month", start).lte("month", end).order("month"),
+        supabase.from("monthly_summaries").select("*")
+          .eq("user_id", user.id)
+          .eq("is_sample", false)
+          .gte("month", start).lte("month", end).order("month"),
         supabase.from("giving_recipients").select("id, name, type, ein").eq("user_id", user.id),
       ]);
       const summaryList = (sums as Summary[]) ?? [];
@@ -50,8 +53,9 @@ const Report = () => {
         const ids = summaryList.map((s) => s.id);
         const { data: tx } = await supabase
           .from("giving_transactions")
-          .select("monthly_summary_id, recipient_id, amount, status")
-          .in("monthly_summary_id", ids);
+          .select("monthly_summary_id, recipient_id, amount, status, is_sample")
+          .in("monthly_summary_id", ids)
+          .eq("is_sample", false);
         setTxs((tx as Tx[]) ?? []);
       } else {
         setTxs([]);
@@ -60,7 +64,9 @@ const Report = () => {
     })();
   }, [user, year]);
 
-  const transferred = summaries.filter((s) => s.status === "transferred");
+  // A month counts toward the year-end report once the user has marked it
+  // either "transferred" or "completed". Sample rows were filtered server-side.
+  const transferred = summaries.filter((s) => s.status === "transferred" || s.status === "completed");
   const totals = useMemo(() => {
     return transferred.reduce(
       (a, s) => ({
@@ -78,7 +84,8 @@ const Report = () => {
     const summaryIds = new Set(transferred.map((s) => s.id));
     const map = new Map<string, number>();
     for (const t of txs) {
-      if (t.status !== "completed" || !summaryIds.has(t.monthly_summary_id)) continue;
+      if (t.status !== "completed" && t.status !== "transferred") continue;
+      if (!summaryIds.has(t.monthly_summary_id)) continue;
       map.set(t.recipient_id, (map.get(t.recipient_id) ?? 0) + Number(t.amount));
     }
     return recipients
