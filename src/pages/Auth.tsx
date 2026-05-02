@@ -26,6 +26,8 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pendingConfirmEmail, setPendingConfirmEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -51,7 +53,18 @@ const Auth = () => {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
     setBusy(false);
-    if (error) toast({ title: "Couldn't sign in", description: error.message, variant: "destructive" });
+    if (error) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes("not confirmed") || msg.includes("email not confirmed")) {
+        setPendingConfirmEmail(parsed.data.email);
+        toast({
+          title: "Please confirm your email",
+          description: "We've sent you a confirmation link. Check your inbox (and spam) before signing in.",
+        });
+        return;
+      }
+      toast({ title: "Couldn't sign in", description: error.message, variant: "destructive" });
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -62,7 +75,7 @@ const Auth = () => {
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
@@ -73,8 +86,30 @@ const Auth = () => {
     setBusy(false);
     if (error) {
       toast({ title: "Couldn't create account", description: error.message, variant: "destructive" });
+      return;
+    }
+    // If the user has a session immediately, email confirmation is disabled
+    // and they'll be redirected by the useEffect above. Otherwise show the
+    // "check your email" screen so they aren't stuck on a static form.
+    if (!data.session) {
+      setPendingConfirmEmail(parsed.data.email);
+    }
+    toast({ title: "Welcome to Steward", description: "We sent a confirmation link to your email." });
+  };
+
+  const resendConfirmation = async () => {
+    if (!pendingConfirmEmail) return;
+    setResending(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: pendingConfirmEmail,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    setResending(false);
+    if (error) {
+      toast({ title: "Couldn't resend", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Welcome to Steward", description: "Let's set up your stewardship." });
+      toast({ title: "Sent", description: "Check your inbox for a fresh confirmation link." });
     }
   };
 
@@ -128,6 +163,34 @@ const Auth = () => {
               : "Create your account — 14 days free, no card required."}
           </p>
 
+          {pendingConfirmEmail ? (
+            <Card className="p-8 shadow-card border-border/60 text-center space-y-4">
+              <div className="mx-auto h-12 w-12 rounded-full bg-gold-soft grid place-items-center">
+                <span className="text-2xl">✉️</span>
+              </div>
+              <h2 className="font-serif text-2xl font-semibold">Check your email</h2>
+              <p className="text-muted-foreground text-sm">
+                We sent a confirmation link to{" "}
+                <span className="font-medium text-foreground">{pendingConfirmEmail}</span>.
+                Click it to activate your Steward account, then come back here to sign in.
+              </p>
+              <div className="flex flex-col gap-2 pt-2">
+                <Button onClick={resendConfirmation} variant="outline" disabled={resending}>
+                  {resending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Resend confirmation email
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => { setPendingConfirmEmail(null); setTab("signin"); }}
+                >
+                  Back to sign in
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground pt-2">
+                Tip: check your spam folder if you don't see it within a minute.
+              </p>
+            </Card>
+          ) : (
           <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")}>
             <TabsList className="grid grid-cols-2 w-full mb-6">
               <TabsTrigger value="signin">Sign in</TabsTrigger>
@@ -194,6 +257,7 @@ const Auth = () => {
               </TabsContent>
             </Card>
           </Tabs>
+          )}
 
           <p className="text-xs text-muted-foreground text-center mt-6">
             By continuing you agree to our Terms and Privacy Policy.
