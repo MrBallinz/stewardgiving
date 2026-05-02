@@ -76,6 +76,7 @@ async function firecrawlScrape(url: string, apiKey: string, opts: {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCors(req.headers.get("origin"));
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -127,12 +128,16 @@ Deno.serve(async (req) => {
     }
 
     const targets: { url: string; role: "website" | "donate" }[] = [];
-    if (recipient.website) targets.push({ url: recipient.website, role: "website" });
-    if (recipient.donate_url) targets.push({ url: recipient.donate_url, role: "donate" });
+    if (recipient.website && isUrlAllowed(recipient.website)) {
+      targets.push({ url: recipient.website, role: "website" });
+    }
+    if (recipient.donate_url && isUrlAllowed(recipient.donate_url)) {
+      targets.push({ url: recipient.donate_url, role: "donate" });
+    }
 
     if (targets.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Add a website or donate URL before verifying." }),
+        JSON.stringify({ error: "Add a public https website or donate URL before verifying." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
