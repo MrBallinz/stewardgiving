@@ -257,6 +257,7 @@ const Auth = () => {
               </TabsContent>
             </Card>
           </Tabs>
+          )}
 
           <p className="text-xs text-muted-foreground text-center mt-6">
             By continuing you agree to our Terms and Privacy Policy.
