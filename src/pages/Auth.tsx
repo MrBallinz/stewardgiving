@@ -163,6 +163,34 @@ const Auth = () => {
               : "Create your account — 14 days free, no card required."}
           </p>
 
+          {pendingConfirmEmail ? (
+            <Card className="p-8 shadow-card border-border/60 text-center space-y-4">
+              <div className="mx-auto h-12 w-12 rounded-full bg-gold-soft grid place-items-center">
+                <span className="text-2xl">✉️</span>
+              </div>
+              <h2 className="font-serif text-2xl font-semibold">Check your email</h2>
+              <p className="text-muted-foreground text-sm">
+                We sent a confirmation link to{" "}
+                <span className="font-medium text-foreground">{pendingConfirmEmail}</span>.
+                Click it to activate your Steward account, then come back here to sign in.
+              </p>
+              <div className="flex flex-col gap-2 pt-2">
+                <Button onClick={resendConfirmation} variant="outline" disabled={resending}>
+                  {resending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Resend confirmation email
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => { setPendingConfirmEmail(null); setTab("signin"); }}
+                >
+                  Back to sign in
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground pt-2">
+                Tip: check your spam folder if you don't see it within a minute.
+              </p>
+            </Card>
+          ) : (
           <Tabs value={tab} onValueChange={(v) => setTab(v as "signin" | "signup")}>
             <TabsList className="grid grid-cols-2 w-full mb-6">
               <TabsTrigger value="signin">Sign in</TabsTrigger>
