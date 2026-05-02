@@ -22,8 +22,8 @@ const FEATURES = [
   {
     icon: Banknote,
     illo: illoBank,
-    title: "Connect your accounts",
-    body: "Securely link your business bank in seconds. We read transactions to compute monthly profit — never store funds, never move money without your consent.",
+    title: "Enter your numbers",
+    body: "Add each month's revenue and expenses in seconds. Steward computes profit and the giving amount your covenant calls for. Bank linking is on the roadmap.",
   },
   {
     icon: HandCoins,
@@ -35,7 +35,7 @@ const FEATURES = [
     icon: LineChart,
     illo: illoLedger,
     title: "Give with clarity",
-    body: "Approve giving each month with one click. Get a beautiful, tax-ready year-end statement that turns numbers into a record of stewardship.",
+    body: "Review giving each month, complete each gift through your church or nonprofit's giving page, and get a beautiful, tax-ready year-end report.",
   },
 ];
 
@@ -50,7 +50,7 @@ const PLANS = [
     name: "Steward",
     price: "$49",
     tag: "Most popular",
-    features: ["1 business entity", "Unlimited recipients", "Auto-transfer giving", "Year-end PDF report", "Priority support"],
+    features: ["1 business entity", "Unlimited recipients", "Monthly review reminders", "Year-end PDF report", "Priority support"],
     highlighted: true,
   },
   {
@@ -126,7 +126,7 @@ const Landing = () => {
               </Button>
             </div>
             <p className="mt-8 text-sm text-muted-foreground/80 animate-fade-up [animation-delay:320ms] opacity-0">
-              Join 500+ Christian business owners stewarding well.
+              Built for Christian business owners who want to give well.
             </p>
           </div>
 
@@ -186,14 +186,14 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Mobile app section */}
+      {/* Mobile-friendly section (web app) */}
       <section id="mobile" className="container py-20 md:py-28">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="relative order-2 lg:order-1">
             <div className="absolute -inset-12 bg-gradient-to-tr from-gold/20 via-gold-soft/30 to-transparent blur-3xl rounded-full pointer-events-none" />
             <img
               src={phoneMockup}
-              alt="Steward iPhone app"
+              alt="Steward dashboard on mobile"
               loading="lazy"
               className="relative w-full max-w-sm mx-auto drop-shadow-2xl"
               width={900}
@@ -203,20 +203,20 @@ const Landing = () => {
           <div className="order-1 lg:order-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-card text-xs font-medium text-muted-foreground mb-6">
               <Smartphone className="h-3 w-3 text-gold" />
-              iOS &amp; Android
+              Works on every device
             </div>
             <h2 className="font-serif text-4xl md:text-5xl font-semibold mb-6">
               Steward in your pocket.
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-              Approve monthly giving on the go. Check your covenant after a sermon. Send a year-end report to your accountant from a coffee shop. Same beautiful experience, native on your phone.
+              Steward is a fast web app that works beautifully on your phone, tablet, and laptop. Review monthly giving on the go, record gifts after Sunday service, send a year-end report to your accountant from a coffee shop.
             </p>
             <ul className="space-y-3 mb-8">
               {[
-                "Native iOS and Android apps",
-                "Push notifications when giving is ready to approve",
-                "Face ID / fingerprint sign-in",
-                "Offline access to your reports",
+                "Mobile-friendly web app — no install required",
+                "Add to your home screen for one-tap access",
+                "Same data and beautiful experience on every device",
+                "Native iOS and Android apps coming soon",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-gold mt-0.5 shrink-0" />
@@ -226,7 +226,7 @@ const Landing = () => {
             </ul>
             <Button size="lg" asChild>
               <Link to="/auth">
-                Get the app
+                Get started
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -289,10 +289,10 @@ const Landing = () => {
             <div className="max-w-xl">
               <ShieldCheck className="h-8 w-8 text-gold mb-4" />
               <h3 className="font-serif text-3xl font-semibold mb-2">
-                Built like a bank. Designed like Linear.
+                Built for the long obedience.
               </h3>
               <p className="text-primary-foreground/80">
-                Bank-grade encryption, read-only connections, and you approve every transfer. Your money stays your money.
+                Your data is private to you. Steward never moves money or holds funds — you complete each gift through your church or nonprofit's own giving page.
               </p>
             </div>
             <Button size="lg" variant="secondary" asChild className="bg-gold text-gold-foreground hover:bg-gold/90 border-0">
