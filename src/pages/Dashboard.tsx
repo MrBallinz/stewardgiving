@@ -12,6 +12,7 @@ import { ArrowRight, CheckCircle2, Clock, Sparkles, Loader2, Trash2 } from "luci
 import { formatCurrency, formatPercent, monthLabel } from "@/lib/format";
 import { toast } from "@/hooks/use-toast";
 import { seedSampleData, clearSampleData } from "@/lib/seedSampleData";
+import { AddMonthDialog } from "@/components/AddMonthDialog";
 
 type Summary = {
   id: string;
@@ -117,7 +118,14 @@ const Dashboard = () => {
           <h1 className="font-serif text-4xl font-semibold tracking-tight">
             {businessName ? `Welcome back, ${businessName.split(" ")[0]}.` : "Welcome back."}
           </h1>
-          <p className="text-muted-foreground mt-1">Here's how you're stewarding this month.</p>
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-1">
+            <p className="text-muted-foreground">Here's how you're stewarding this month.</p>
+            <AddMonthDialog onCreated={async () => {
+              if (!user) return;
+              const { data: sums } = await supabase.from("monthly_summaries").select("*").eq("user_id", user.id).order("month", { ascending: false });
+              setSummaries((sums as Summary[]) ?? []);
+            }} />
+          </div>
         </div>
 
         {loading ? (

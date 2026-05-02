@@ -4,10 +4,40 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = new Set([
+  "https://stewardgiving.lovable.app",
+  "https://id-preview--f46fe20b-fd62-4cf4-8a60-9663e7eed2e3.lovable.app",
+  "http://localhost:8080",
+  "http://localhost:5173",
+]);
+
+function buildCors(origin: string | null) {
+  const allow = origin && ALLOWED_ORIGINS.has(origin) ? origin : "https://stewardgiving.lovable.app";
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+// SSRF guard: reject private/loopback/link-local/metadata hosts and require https/http.
+const BLOCKED_HOST_RE = /^(localhost|127\.|10\.|192\.168\.|169\.254\.|0\.|::1|fe80:|metadata\.google\.|169\.254\.169\.254)/i;
+function isUrlAllowed(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    if (BLOCKED_HOST_RE.test(u.hostname)) return false;
+    // Block bare IPs in private ranges
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(u.hostname)) {
+      const [a, b] = u.hostname.split(".").map(Number);
+      if (a === 10 || a === 127 || a === 0 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254)) {
+        return false;
+      }
+    }
+    return true;
+  } catch { return false; }
+}
 
 const FIRECRAWL_V2 = "https://api.firecrawl.dev/v2";
 
