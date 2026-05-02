@@ -16,7 +16,7 @@ type Summary = {
   net_profit: number; giving_amount: number; status: string;
 };
 type Recipient = { id: string; name: string; type: string; ein: string | null };
-type Tx = { monthly_summary_id: string; recipient_id: string; amount: number; status: string };
+type Tx = { monthly_summary_id: string; recipient_id: string; amount: number; status: string; is_sample?: boolean };
 
 const Report = () => {
   const { user } = useAuth();
