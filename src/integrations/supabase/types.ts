@@ -114,6 +114,7 @@ export type Database = {
       }
       churches: {
         Row: {
+          aliases: string[]
           approved_by_admin_id: string | null
           city: string | null
           created_at: string
@@ -128,6 +129,7 @@ export type Database = {
           last_verified_at: string | null
           legal_name: string
           ntee_code: string | null
+          pastor_name: string | null
           phone: string | null
           source_type: string
           source_url: string | null
@@ -140,6 +142,7 @@ export type Database = {
           zip: string | null
         }
         Insert: {
+          aliases?: string[]
           approved_by_admin_id?: string | null
           city?: string | null
           created_at?: string
@@ -154,6 +157,7 @@ export type Database = {
           last_verified_at?: string | null
           legal_name: string
           ntee_code?: string | null
+          pastor_name?: string | null
           phone?: string | null
           source_type?: string
           source_url?: string | null
@@ -166,6 +170,7 @@ export type Database = {
           zip?: string | null
         }
         Update: {
+          aliases?: string[]
           approved_by_admin_id?: string | null
           city?: string | null
           created_at?: string
@@ -180,6 +185,7 @@ export type Database = {
           last_verified_at?: string | null
           legal_name?: string
           ntee_code?: string | null
+          pastor_name?: string | null
           phone?: string | null
           source_type?: string
           source_url?: string | null
@@ -515,7 +521,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       recipient_type: "church" | "missions" | "nonprofit" | "other"
