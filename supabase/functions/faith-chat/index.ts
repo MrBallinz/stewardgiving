@@ -39,29 +39,25 @@ Your voice:
 
 If asked about other faiths, respond with respect and clarity that Steward is built on a Christian conviction of stewardship, while welcoming anyone who wants to give with discipline.`;
 
-// Per-user sliding window: max 20 requests / 60s, max 200 / hour.
-type Bucket = { minute: number[]; hour: number[] };
-const buckets = new Map<string, Bucket>();
+// DB-backed sliding window: max 20 requests / 60s, max 200 / hour.
 const MINUTE_LIMIT = 20;
 const HOUR_LIMIT = 200;
 
-function rateLimit(userId: string): { ok: boolean; retryAfter?: number } {
-  const now = Date.now();
-  const b = buckets.get(userId) ?? { minute: [], hour: [] };
-  b.minute = b.minute.filter((t) => now - t < 60_000);
-  b.hour = b.hour.filter((t) => now - t < 3_600_000);
-  if (b.minute.length >= MINUTE_LIMIT) {
-    buckets.set(userId, b);
-    return { ok: false, retryAfter: Math.ceil((60_000 - (now - b.minute[0])) / 1000) };
+async function rateLimit(
+  serviceClient: ReturnType<typeof createClient>,
+  userId: string,
+): Promise<{ ok: boolean; retryAfter?: number }> {
+  const { data, error } = await serviceClient.rpc("consume_chat_rate", {
+    _user_id: userId,
+    _minute_limit: MINUTE_LIMIT,
+    _hour_limit: HOUR_LIMIT,
+  });
+  if (error) {
+    console.error("consume_chat_rate error:", error.message);
+    return { ok: true }; // fail-open so chat doesn't break on transient DB issues
   }
-  if (b.hour.length >= HOUR_LIMIT) {
-    buckets.set(userId, b);
-    return { ok: false, retryAfter: Math.ceil((3_600_000 - (now - b.hour[0])) / 1000) };
-  }
-  b.minute.push(now);
-  b.hour.push(now);
-  buckets.set(userId, b);
-  return { ok: true };
+  const r = data as { ok: boolean; retry_after?: number };
+  return r.ok ? { ok: true } : { ok: false, retryAfter: r.retry_after };
 }
 
 Deno.serve(async (req) => {
@@ -95,8 +91,12 @@ Deno.serve(async (req) => {
     }
     const userId = claims.claims.sub as string;
 
-    // ---- Rate limit ----
-    const rl = rateLimit(userId);
+    // ---- Rate limit (DB-backed) ----
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const rl = await rateLimit(serviceClient, userId);
     if (!rl.ok) {
       return new Response(
         JSON.stringify({ error: "Rate limit exceeded. Please slow down." }),
