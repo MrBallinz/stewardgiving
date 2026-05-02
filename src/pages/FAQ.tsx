@@ -37,20 +37,24 @@ const SECTIONS: {
     scripture: "“Whatever you do, work at it with all your heart.” — Col. 3:23",
     items: [
       {
-        q: "How do I connect my business bank account?",
-        a: "Go to **Settings → Bank Connections**. We use a secure read-only connection to compute monthly profit. Steward never stores funds and never moves money without your explicit approval each month.",
+        q: "How do I record my monthly numbers?",
+        a: "From the **Dashboard**, click **Add this month** and enter your revenue and expenses. Steward computes profit and the giving amount your covenant calls for. Bank linking is on the roadmap — for now, manual entry keeps you in full control.",
       },
       {
         q: "How do I add or change recipients?",
         a: "Open the **Recipients** page. Add your church, missions agencies, or nonprofits, and set the percentage of giving each one receives. Allocations must total 100%.",
       },
       {
-        q: "What is a ‘giving covenant’?",
-        a: "Your covenant is the rule you commit to: a percentage of monthly profit, a minimum monthly amount, and whether transfers happen automatically. Set it on the **Covenant** page. You can update it any time the Lord leads.",
+        q: "What is a 'giving covenant'?",
+        a: "Your covenant is the rule you commit to: a percentage of monthly profit and an optional minimum monthly amount. Set it on the **Covenant** page. You can update it any time the Lord leads.",
+      },
+      {
+        q: "How does giving actually happen?",
+        a: "Steward never moves money. Each month you review the calculated amount, then complete each gift through your church or nonprofit's own giving page. Steward records what you gave so your year-end report is accurate.",
       },
       {
         q: "How does the year-end report work?",
-        a: "The **Report** page generates a tax-ready summary of every gift made through Steward — recipient, date, amount, and EIN where provided. Download it as a PDF for your CPA.",
+        a: "The **Report** page generates a tax-ready summary of every gift you've recorded — recipient, date, amount, and EIN where provided. Download it as a PDF for your CPA.",
       },
     ],
   },
@@ -73,7 +77,7 @@ const SECTIONS: {
       },
       {
         q: "Will Steward share my financial data?",
-        a: "No. Your data is private to you. We do not sell, share, or use it to train external models. Read-only bank access is encrypted end to end.",
+        a: "No. Your data is private to you. We do not sell or share it, and we do not use your numbers to train external models.",
       },
     ],
   },

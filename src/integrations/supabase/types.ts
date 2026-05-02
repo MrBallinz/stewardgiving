@@ -521,6 +521,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_chat_rate: {
+        Args: { _hour_limit: number; _minute_limit: number; _user_id: string }
+        Returns: Json
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
