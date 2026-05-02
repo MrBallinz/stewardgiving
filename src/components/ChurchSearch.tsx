@@ -80,17 +80,24 @@ export function ChurchSearch({ onSelect, onSubmitted, placeholder, autoFocus }: 
         return;
       }
       const like = `%${safe}%`;
+      // Fuzzy/alias-aware search:
+      // - ilike on name/dba/city/state for substring matches
+      // - aliases array contains exact token (case-insensitive via lowercased input)
+      // pg_trgm GIN indexes on legal_name, dba_name and aliases keep ilike fast.
+      const tokens = safe.toLowerCase().split(" ").filter(Boolean);
+      const aliasFilters = tokens.map((t) => `aliases.cs.{${t}}`);
+      const orClauses = [
+        `legal_name.ilike.${like}`,
+        `dba_name.ilike.${like}`,
+        `city.ilike.${like}`,
+        `state.ilike.${like}`,
+        `pastor_name.ilike.${like}`,
+        ...aliasFilters,
+      ].join(",");
       const { data, error } = await supabase
         .from("churches")
         .select("id,legal_name,dba_name,city,state,denomination,website,giving_platform,giving_url,verification_status,ein")
-        .or(
-          [
-            `legal_name.ilike.${like}`,
-            `dba_name.ilike.${like}`,
-            `city.ilike.${like}`,
-            `state.ilike.${like}`,
-          ].join(",")
-        )
+        .or(orClauses)
         .limit(10);
       // Drop stale responses.
       if (myReqId !== reqIdRef.current) return;
