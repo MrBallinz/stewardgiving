@@ -135,12 +135,12 @@ export default function Demo() {
 
       {/* Hero */}
       <section className="container mx-auto px-4 pt-12 pb-6 text-center max-w-3xl">
-        <p className="text-sm font-medium text-gold uppercase tracking-wider mb-3">Interactive demo</p>
+        <p className="text-sm font-medium text-gold uppercase tracking-wider mb-3">Interactive demo · product vision</p>
         <h1 className="text-4xl md:text-5xl font-serif font-semibold text-foreground mb-4">
-          See the <span className="italic">one faithful click</span> in motion
+          See the <span className="italic">stewardship workflow</span> in motion
         </h1>
         <p className="text-lg text-muted-foreground">
-          Walk through the full Steward workflow — from linking your bank to gifts landing in your church and missions, all from a single approval.
+          A walkthrough of where Steward is heading. Today you enter monthly numbers and complete each gift through your church or nonprofit's giving page — bank linking and one-click multi-platform dispatch are on the roadmap.
         </p>
       </section>
 
