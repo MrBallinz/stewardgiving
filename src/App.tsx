@@ -23,6 +23,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Security from "./pages/Security";
 import OAuthConsent from "./pages/OAuthConsent";
+import AdminRegistry from "./pages/AdminRegistry";
 import { RequireAuth } from "./components/RequireAuth";
 import { ChatWidget } from "./components/ChatWidget";
 import { CookieBanner } from "./components/CookieBanner";
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/report" element={<RequireAuth><Report /></RequireAuth>} />
           <Route path="/review/:summary_id" element={<RequireAuth><Review /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+          <Route path="/admin/registry" element={<RequireAuth><AdminRegistry /></RequireAuth>} />
           <Route path="/legal" element={<Legal />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
