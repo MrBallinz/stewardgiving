@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://ilbyouqfvcjhpnhyetkz.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "steward-mcp",
+      "version": "0.1.0",
+      "title": "Steward"
+    },
+    "tools": [
+      {
+        "name": "get_profile",
+        "title": "Get profile",
+        "description": "Return the signed-in Steward user's profile: full name, business name, business type, and onboarding status.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_covenant",
+        "title": "Get giving covenant",
+        "description": "Return the signed-in user's giving covenant: percent of monthly profit committed, monthly minimum, auto-transfer flag, and their chosen scripture anchor.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_recipients",
+        "title": "List giving recipients",
+        "description": "List the signed-in user's chosen giving recipients (church, missions, nonprofits) with allocation percentages, verification status, and their giving-page URL when known.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "include_unverified": {
+              "default": true,
+              "description": "Include recipients that have not been verified yet. Defaults to true.",
+              "type": "boolean"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_monthly_summaries",
+        "title": "List monthly summaries",
+        "description": "List monthly profit/giving summaries for the signed-in user. Excludes sample data by default.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 12,
+              "description": "Max months to return (default 12).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 60
+            },
+            "include_sample": {
+              "default": false,
+              "description": "Include sample/demo data. Defaults to false.",
+              "type": "boolean"
+            },
+            "year": {
+              "default": null,
+              "description": "Filter to a specific calendar year, or null for all years.",
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 2000,
+                  "maximum": 2100
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_transactions",
+        "title": "List giving transactions",
+        "description": "List individual gift transactions for the signed-in user. Steward never moves money; each transaction records a gift the user made through the recipient's own giving page.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            },
+            "status": {
+              "default": "all",
+              "type": "string",
+              "enum": [
+                "pending",
+                "completed",
+                "transferred",
+                "all"
+              ]
+            },
+            "include_sample": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_ytd_summary",
+        "title": "Get YTD giving summary",
+        "description": "Return a year-to-date rollup for the signed-in user: total revenue, total expenses, net profit, total giving, and per-recipient breakdown. Excludes sample data.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "year": {
+              "default": null,
+              "description": "Calendar year. Defaults to the current year.",
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 2000,
+                  "maximum": 2100
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_churches",
+        "title": "Search church directory",
+        "description": "Search Steward's public church directory by name, alias, city, state, or pastor. Returns basic identity plus known giving platform info so the caller can point users toward the right giving page.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 120,
+              "description": "Search text — name, alias, or pastor name."
+            },
+            "state": {
+              "default": null,
+              "description": "Optional 2-letter US state filter.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 2
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "limit": {
+              "default": 10,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25
+            }
+          },
+          "required": [
+            "query"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

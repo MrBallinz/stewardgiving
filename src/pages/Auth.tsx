@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -20,6 +20,7 @@ const credSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -29,8 +30,21 @@ const Auth = () => {
   const [pendingConfirmEmail, setPendingConfirmEmail] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
 
+  // Preserve where the user came from (e.g. an OAuth consent URL). Only allow
+  // same-origin relative paths.
+  const nextPath = useMemo(() => {
+    const raw = searchParams.get("next");
+    if (!raw) return null;
+    if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+    return raw;
+  }, [searchParams]);
+
   useEffect(() => {
     if (!authLoading && user) {
+      if (nextPath) {
+        window.location.replace(nextPath);
+        return;
+      }
       // Decide where to land — onboarded or not.
       supabase
         .from("profiles")
@@ -41,7 +55,7 @@ const Auth = () => {
           navigate(data?.onboarded ? "/dashboard" : "/onboarding", { replace: true });
         });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, nextPath]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,11 +89,13 @@ const Auth = () => {
       return;
     }
     setBusy(true);
+    const nextQuery = nextPath ? `?next=${encodeURIComponent(nextPath)}` : "";
+    const authReturn = `${window.location.origin}/auth${nextQuery}`;
     const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: authReturn,
         data: { full_name: fullName.trim() },
       },
     });
@@ -100,10 +116,11 @@ const Auth = () => {
   const resendConfirmation = async () => {
     if (!pendingConfirmEmail) return;
     setResending(true);
+    const nextQuery = nextPath ? `?next=${encodeURIComponent(nextPath)}` : "";
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: pendingConfirmEmail,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: `${window.location.origin}/auth${nextQuery}` },
     });
     setResending(false);
     if (error) {
@@ -115,8 +132,9 @@ const Auth = () => {
 
   const handleGoogle = async () => {
     setBusy(true);
+    const nextQuery = nextPath ? `?next=${encodeURIComponent(nextPath)}` : "";
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/auth",
+      redirect_uri: `${window.location.origin}/auth${nextQuery}`,
     });
     if (result.error) {
       setBusy(false);
