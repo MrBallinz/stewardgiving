@@ -170,12 +170,18 @@ Deno.serve(async (req) => {
       const { data } = await admin.from("churches").select("id,website,legal_name").in("id", explicitIds).limit(limit);
       churches = (data ?? []) as any;
     } else {
+      // Pick churches that need a verified giving link. Includes:
+      //  - rows with no giving_url yet
+      //  - rows whose giving_url was NOT set by a live scrape (guessed/seeded)
+      //  - rows not yet auto-verified against a known processor
+      // Skip ones scraped in the last 7 days to avoid re-hammering.
+      const staleCutoff = new Date(Date.now() - 7 * 864e5).toISOString();
       const { data } = await admin
         .from("churches")
-        .select("id,website,legal_name")
-        .is("giving_url", null)
+        .select("id,website,legal_name,giving_url,giving_url_source,verification_status")
         .not("website", "is", null)
-        .or("enrichment_attempted_at.is.null,enrichment_attempted_at.lt." + new Date(Date.now() - 7 * 864e5).toISOString())
+        .neq("verification_status", "verified")
+        .or(`enrichment_attempted_at.is.null,enrichment_attempted_at.lt.${staleCutoff}`)
         .limit(limit);
       churches = (data ?? []) as any;
     }
