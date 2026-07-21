@@ -165,7 +165,6 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const explicitIds: string[] | undefined = Array.isArray(body.church_ids) ? body.church_ids : undefined;
     const limit = Math.min(Math.max(Number(body.limit ?? 15), 1), 50);
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
     let churches: Array<{ id: string; website: string | null; legal_name: string }>;
     if (explicitIds && explicitIds.length) {
