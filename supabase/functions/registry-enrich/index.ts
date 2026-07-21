@@ -148,16 +148,18 @@ Deno.serve(async (req) => {
   try {
     if (!FIRECRAWL_API_KEY) throw new Error("FIRECRAWL_API_KEY not configured");
     const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) {
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    if (!token) {
       return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
     }
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: u } = await userClient.auth.getUser();
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    const { data: u, error: userErr } = await admin.auth.getUser(token);
     const email = u?.user?.email?.toLowerCase();
-    if (!email || !ADMIN_EMAILS.includes(email)) {
-      return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...cors, "Content-Type": "application/json" } });
+    if (userErr || !email) {
+      return new Response(JSON.stringify({ error: "unauthorized", detail: userErr?.message ?? "no user" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
+    }
+    if (!ADMIN_EMAILS.includes(email)) {
+      return new Response(JSON.stringify({ error: "forbidden", email }), { status: 403, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
     const body = await req.json().catch(() => ({}));
