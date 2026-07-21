@@ -18,6 +18,54 @@ const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "")
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
 
+async function requireRegistryAdmin(req: Request, admin: ReturnType<typeof createClient>) {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) {
+    return {
+      ok: false as const,
+      response: new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
+      }),
+    };
+  }
+
+  const { data: userData, error: userErr } = await admin.auth.getUser(token);
+  const user = userData?.user;
+  const email = user?.email?.trim().toLowerCase();
+  if (userErr || !user?.id || !email) {
+    return {
+      ok: false as const,
+      response: new Response(JSON.stringify({ error: "unauthorized", detail: userErr?.message ?? "no user" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
+      }),
+    };
+  }
+
+  const { data: roleRow, error: roleErr } = await admin
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  const allowedByRole = Boolean(roleRow) && !roleErr;
+  const allowedByEmail = ADMIN_EMAILS.includes(email);
+  if (!allowedByRole && !allowedByEmail) {
+    return {
+      ok: false as const,
+      response: new Response(JSON.stringify({ error: "forbidden", detail: "Signed-in account is not authorized for registry admin." }), {
+        status: 403,
+        headers: { ...cors, "Content-Type": "application/json" },
+      }),
+    };
+  }
+
+  return { ok: true as const, userId: user.id, email };
+}
+
 // Known processors → platform id (matches churches_giving_platform_check).
 // Order matters: check longer/more-specific hostnames first.
 const PLATFORM_HOSTS: Array<[RegExp, string]> = [
@@ -147,20 +195,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
     if (!FIRECRAWL_API_KEY) throw new Error("FIRECRAWL_API_KEY not configured");
-    const authHeader = req.headers.get("Authorization") ?? "";
-    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-    if (!token) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
-    }
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-    const { data: u, error: userErr } = await admin.auth.getUser(token);
-    const email = u?.user?.email?.toLowerCase();
-    if (userErr || !email) {
-      return new Response(JSON.stringify({ error: "unauthorized", detail: userErr?.message ?? "no user" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
-    }
-    if (!ADMIN_EMAILS.includes(email)) {
-      return new Response(JSON.stringify({ error: "forbidden", email }), { status: 403, headers: { ...cors, "Content-Type": "application/json" } });
-    }
+    const adminCheck = await requireRegistryAdmin(req, admin);
+    if (!adminCheck.ok) return adminCheck.response;
 
     const body = await req.json().catch(() => ({}));
     const explicitIds: string[] | undefined = Array.isArray(body.church_ids) ? body.church_ids : undefined;
