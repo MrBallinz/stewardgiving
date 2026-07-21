@@ -87,8 +87,8 @@ export default function AdminRegistry() {
     </div>
   );
 
-  return (
-    <div className="mx-auto max-w-4xl p-6 space-y-6">
+  // Gate: require a signed-in session before showing admin controls. Offer
+  // Google sign-in directly (no password) — server still enforces ADMIN_EMAILS.
   // Gate: require a signed-in session before showing admin controls. Offer
   // Google sign-in directly (no password) — server still enforces ADMIN_EMAILS.
   if (authLoading) {
