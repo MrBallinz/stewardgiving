@@ -17,6 +17,54 @@ const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "")
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
 
+async function requireRegistryAdmin(req: Request, admin: ReturnType<typeof createClient>) {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) {
+    return {
+      ok: false as const,
+      response: new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
+      }),
+    };
+  }
+
+  const { data: userData, error: userErr } = await admin.auth.getUser(token);
+  const user = userData?.user;
+  const email = user?.email?.trim().toLowerCase();
+  if (userErr || !user?.id || !email) {
+    return {
+      ok: false as const,
+      response: new Response(JSON.stringify({ error: "unauthorized", detail: userErr?.message ?? "no user" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
+      }),
+    };
+  }
+
+  const { data: roleRow, error: roleErr } = await admin
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  const allowedByRole = Boolean(roleRow) && !roleErr;
+  const allowedByEmail = ADMIN_EMAILS.includes(email);
+  if (!allowedByRole && !allowedByEmail) {
+    return {
+      ok: false as const,
+      response: new Response(JSON.stringify({ error: "forbidden", detail: "Signed-in account is not authorized for registry admin." }), {
+        status: 403,
+        headers: { ...cors, "Content-Type": "application/json" },
+      }),
+    };
+  }
+
+  return { ok: true as const, userId: user.id, email };
+}
+
 const BAD_HOSTS = new Set([
   "facebook.com", "m.facebook.com", "www.facebook.com",
   "instagram.com", "twitter.com", "x.com", "youtube.com",
@@ -53,19 +101,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   try {
     if (!FIRECRAWL_API_KEY) throw new Error("FIRECRAWL_API_KEY not configured");
-    const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
-    }
-    // Verify caller and check admin allowlist.
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: u } = await userClient.auth.getUser();
-    const email = u?.user?.email?.toLowerCase();
-    if (!email || !ADMIN_EMAILS.includes(email)) {
-      return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...cors, "Content-Type": "application/json" } });
-    }
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    const adminCheck = await requireRegistryAdmin(req, admin);
+    if (!adminCheck.ok) return adminCheck.response;
 
     const body = await req.json().catch(() => ({}));
     const city = String(body.city ?? "").trim();
@@ -75,7 +113,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "city and state required" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
     }
 
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
     const query = `churches in ${city}, ${state} -site:facebook.com -site:yelp.com`;
     const results = await firecrawlSearch(query, limit);
 
