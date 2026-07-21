@@ -3,18 +3,21 @@
 // simply invokes them and streams progress.
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Play, Search, ShieldCheck } from "lucide-react";
+import { Loader2, Play, Search, ShieldCheck, LogOut } from "lucide-react";
 import { TOP_METROS } from "@/lib/top-metros";
 
 type Counts = { total: number; with_website: number; with_giving_url: number; verified: number };
 
 export default function AdminRegistry() {
+  const { user, loading: authLoading } = useAuth();
   const [counts, setCounts] = useState<Counts | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
@@ -84,14 +87,70 @@ export default function AdminRegistry() {
     </div>
   );
 
+  // Gate: require a signed-in session before showing admin controls. Offer
+  // Google sign-in directly (no password) — server still enforces ADMIN_EMAILS.
+  // Gate: require a signed-in session before showing admin controls. Offer
+  // Google sign-in directly (no password) — server still enforces ADMIN_EMAILS.
+  if (authLoading) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    const signInWithGoogle = async () => {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/admin/registry`,
+      });
+      if (result.error) {
+        toast({
+          title: "Google sign-in failed",
+          description: String((result.error as Error).message ?? result.error),
+          variant: "destructive",
+        });
+      }
+    };
+    return (
+      <div className="mx-auto max-w-md p-6 pt-16">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <ShieldCheck className="h-4 w-4" /> Admin sign-in required
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              The Church Registry admin is gated by your Google account. Sign in
+              with an email on the approved admin list — no password needed.
+            </p>
+            <Button className="w-full" onClick={signInWithGoogle}>
+              <GoogleIcon /> Continue with Google
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-4xl p-6 space-y-6">
-      <header>
-        <h1 className="font-serif text-3xl">Church registry — admin</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Populate the public church directory and auto-detect online giving links.
-          Server-side calls are gated by <code className="text-xs">ADMIN_EMAILS</code>.
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl">Church registry — admin</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Signed in as <span className="font-medium text-foreground">{user.email}</span>.
+            Server-side calls are gated by <code className="text-xs">ADMIN_EMAILS</code>.
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={async () => { await supabase.auth.signOut(); }}
+        >
+          <LogOut className="h-4 w-4 mr-1.5" /> Sign out
+        </Button>
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -165,3 +224,12 @@ export default function AdminRegistry() {
     </div>
   );
 }
+
+const GoogleIcon = () => (
+  <svg viewBox="0 0 24 24" className="h-4 w-4 mr-2" aria-hidden="true">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+    <path fill="#FBBC05" d="M5.84 14.1A6.99 6.99 0 0 1 5.47 12c0-.73.13-1.44.36-2.1V7.06H2.18A11 11 0 0 0 1 12c0 1.78.43 3.46 1.18 4.94l3.66-2.84z" />
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" />
+  </svg>
+);
