@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { AppShell } from "@/components/AppShell";
@@ -16,7 +16,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, ShieldCheck } from "lucide-react";
 
 const Settings = () => {
   const { user } = useAuth();
@@ -119,6 +119,25 @@ const Settings = () => {
           <div className="space-y-6"><Skeleton className="h-72" /><Skeleton className="h-48" /><Skeleton className="h-32" /></div>
         ) : (
           <div className="space-y-6">
+            {/* Admin shortcut */}
+            <Card className="p-6 shadow-card border-border/60 space-y-4">
+              <div>
+                <h2 className="font-serif text-xl font-semibold flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  Church registry admin
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Discover and enrich church records so users can find giving links quickly.
+                </p>
+              </div>
+              <Button asChild>
+                <Link to="/admin/registry">Open admin registry</Link>
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Access is gated server-side by the ADMIN_EMAILS list. If the button above is missing or you see a forbidden error, make sure you are signed in with an authorized admin email.
+              </p>
+            </Card>
+
             {/* Profile */}
             <Card className="p-6 shadow-card border-border/60 space-y-5">
               <div>
