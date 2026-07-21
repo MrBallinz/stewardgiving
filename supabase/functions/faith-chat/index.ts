@@ -2,15 +2,16 @@
 // Authenticated + per-user in-memory rate limiting + restricted CORS.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const ALLOWED_ORIGINS = new Set([
-  "https://stewardgiving.lovable.app",
-  "https://id-preview--f46fe20b-fd62-4cf4-8a60-9663e7eed2e3.lovable.app",
-  "http://localhost:8080",
-  "http://localhost:5173",
-]);
+const ORIGIN_PATTERNS: RegExp[] = [
+  /^https:\/\/stewardgiving\.lovable\.app$/,
+  /^https:\/\/[a-z0-9-]+\.lovable\.app$/,
+  /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/,
+  /^https:\/\/[a-z0-9-]+\.sandbox\.lovable\.dev$/,
+  /^http:\/\/localhost(:\d+)?$/,
+];
 
 function buildCors(origin: string | null) {
-  const allow = origin && ALLOWED_ORIGINS.has(origin) ? origin : "https://stewardgiving.lovable.app";
+  const allow = origin && ORIGIN_PATTERNS.some((r) => r.test(origin)) ? origin : "https://stewardgiving.lovable.app";
   return {
     "Access-Control-Allow-Origin": allow,
     "Vary": "Origin",
