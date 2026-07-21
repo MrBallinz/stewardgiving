@@ -121,9 +121,12 @@ export type Database = {
           dba_name: string | null
           denomination: string | null
           ein: string | null
+          enrichment_attempted_at: string | null
+          enrichment_last_error: string | null
           enrichment_status: string
           giving_platform: string | null
           giving_url: string | null
+          giving_url_source: string | null
           google_place_id: string | null
           id: string
           last_verified_at: string | null
@@ -149,9 +152,12 @@ export type Database = {
           dba_name?: string | null
           denomination?: string | null
           ein?: string | null
+          enrichment_attempted_at?: string | null
+          enrichment_last_error?: string | null
           enrichment_status?: string
           giving_platform?: string | null
           giving_url?: string | null
+          giving_url_source?: string | null
           google_place_id?: string | null
           id?: string
           last_verified_at?: string | null
@@ -177,9 +183,12 @@ export type Database = {
           dba_name?: string | null
           denomination?: string | null
           ein?: string | null
+          enrichment_attempted_at?: string | null
+          enrichment_last_error?: string | null
           enrichment_status?: string
           giving_platform?: string | null
           giving_url?: string | null
+          giving_url_source?: string | null
           google_place_id?: string | null
           id?: string
           last_verified_at?: string | null
