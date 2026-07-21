@@ -22,6 +22,7 @@ import Legal from "./pages/Legal";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Security from "./pages/Security";
+import OAuthConsent from "./pages/OAuthConsent";
 import { RequireAuth } from "./components/RequireAuth";
 import { ChatWidget } from "./components/ChatWidget";
 import { CookieBanner } from "./components/CookieBanner";
@@ -53,6 +54,7 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/security" element={<Security />} />
+          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ChatWidget />
