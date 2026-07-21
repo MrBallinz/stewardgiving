@@ -1,5 +1,5 @@
 // Steward — discover churches in a metro via Firecrawl web search and upsert stubs.
-// Admin-only. Auth: requires JWT; email must be in ADMIN_EMAILS (comma-separated env).
+// Admin-only. Auth: requires JWT and either an admin role or ADMIN_EMAILS allowlist match.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const cors = {
@@ -10,7 +10,6 @@ const cors = {
 };
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
 const ADMIN_EMAILS = (Deno.env.get("ADMIN_EMAILS") ?? "")
