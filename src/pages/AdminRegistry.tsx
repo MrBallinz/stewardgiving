@@ -17,6 +17,7 @@ import { TOP_METROS } from "@/lib/top-metros";
 type Counts = { total: number; with_website: number; with_giving_url: number; verified: number };
 
 export default function AdminRegistry() {
+  const { user, loading: authLoading } = useAuth();
   const [counts, setCounts] = useState<Counts | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [log, setLog] = useState<string[]>([]);
