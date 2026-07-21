@@ -89,12 +89,68 @@ export default function AdminRegistry() {
 
   return (
     <div className="mx-auto max-w-4xl p-6 space-y-6">
-      <header>
-        <h1 className="font-serif text-3xl">Church registry — admin</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Populate the public church directory and auto-detect online giving links.
-          Server-side calls are gated by <code className="text-xs">ADMIN_EMAILS</code>.
-        </p>
+  // Gate: require a signed-in session before showing admin controls. Offer
+  // Google sign-in directly (no password) — server still enforces ADMIN_EMAILS.
+  if (authLoading) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    const signInWithGoogle = async () => {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/admin/registry`,
+      });
+      if (result.error) {
+        toast({
+          title: "Google sign-in failed",
+          description: String((result.error as Error).message ?? result.error),
+          variant: "destructive",
+        });
+      }
+    };
+    return (
+      <div className="mx-auto max-w-md p-6 pt-16">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <ShieldCheck className="h-4 w-4" /> Admin sign-in required
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              The Church Registry admin is gated by your Google account. Sign in
+              with an email on the approved admin list — no password needed.
+            </p>
+            <Button className="w-full" onClick={signInWithGoogle}>
+              <GoogleIcon /> Continue with Google
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl p-6 space-y-6">
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-3xl">Church registry — admin</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Signed in as <span className="font-medium text-foreground">{user.email}</span>.
+            Server-side calls are gated by <code className="text-xs">ADMIN_EMAILS</code>.
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={async () => { await supabase.auth.signOut(); }}
+        >
+          <LogOut className="h-4 w-4 mr-1.5" /> Sign out
+        </Button>
       </header>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
