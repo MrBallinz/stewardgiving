@@ -89,11 +89,13 @@ const Auth = () => {
       return;
     }
     setBusy(true);
+    const nextQuery = nextPath ? `?next=${encodeURIComponent(nextPath)}` : "";
+    const authReturn = `${window.location.origin}/auth${nextQuery}`;
     const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: authReturn,
         data: { full_name: fullName.trim() },
       },
     });
@@ -114,10 +116,11 @@ const Auth = () => {
   const resendConfirmation = async () => {
     if (!pendingConfirmEmail) return;
     setResending(true);
+    const nextQuery = nextPath ? `?next=${encodeURIComponent(nextPath)}` : "";
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: pendingConfirmEmail,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: `${window.location.origin}/auth${nextQuery}` },
     });
     setResending(false);
     if (error) {
@@ -129,8 +132,9 @@ const Auth = () => {
 
   const handleGoogle = async () => {
     setBusy(true);
+    const nextQuery = nextPath ? `?next=${encodeURIComponent(nextPath)}` : "";
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/auth",
+      redirect_uri: `${window.location.origin}/auth${nextQuery}`,
     });
     if (result.error) {
       setBusy(false);
