@@ -3,13 +3,15 @@
 // simply invokes them and streams progress.
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Play, Search, ShieldCheck } from "lucide-react";
+import { Loader2, Play, Search, ShieldCheck, LogOut } from "lucide-react";
 import { TOP_METROS } from "@/lib/top-metros";
 
 type Counts = { total: number; with_website: number; with_giving_url: number; verified: number };
