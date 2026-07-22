@@ -260,6 +260,101 @@ export default function AdminRegistry() {
       </div>
 
       <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4" /> Review queue
+            <Badge variant="outline" className="ml-2">{queue.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {queue.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nothing pending. Every listing users can see has been approved.</p>
+          ) : (
+            <ul className="divide-y divide-border/60">
+              {queue.map((r) => (
+                <li key={r.id} className="py-3 flex flex-wrap items-start gap-3">
+                  <div className="flex-1 min-w-[220px]">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium">{r.dba_name ?? r.legal_name}</span>
+                      <Badge variant="outline" className="text-[10px]">{r.listing_status}</Badge>
+                      <Badge variant="secondary" className="text-[10px]">{r.source_type}</Badge>
+                      {r.giving_platform && <Badge variant="outline" className="text-[10px]">{r.giving_platform}</Badge>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {[r.city, r.state].filter(Boolean).join(", ") || "—"}
+                    </div>
+                    {r.giving_url && (
+                      <a href={r.giving_url} target="_blank" rel="noreferrer"
+                         className="text-xs inline-flex items-center gap-1 mt-1 underline underline-offset-2 break-all">
+                        {r.giving_url} <ExternalLink className="h-3 w-3 shrink-0" />
+                      </a>
+                    )}
+                    {r.website && (
+                      <a href={r.website} target="_blank" rel="noreferrer"
+                         className="block text-xs text-muted-foreground mt-0.5 underline underline-offset-2 break-all">
+                        {r.website}
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button size="sm" onClick={() => approve(r)} disabled={queueBusy === r.id}>
+                      {queueBusy === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
+                      Approve
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setRejectFor(r)} disabled={queueBusy === r.id}>
+                      <X className="h-3.5 w-3.5 mr-1" /> Reject
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Flag className="h-4 w-4" /> Open reports
+            <Badge variant="outline" className="ml-2">{reports.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {reports.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No open reports.</p>
+          ) : (
+            <ul className="divide-y divide-border/60">
+              {reports.map((r) => (
+                <li key={r.id} className="py-3 flex flex-wrap items-start gap-3">
+                  <div className="flex-1 min-w-[220px]">
+                    <div className="font-medium">{r.churches?.dba_name ?? r.churches?.legal_name ?? r.church_id}</div>
+                    <div className="text-xs mt-0.5"><span className="text-muted-foreground">Reason:</span> {r.reason}</div>
+                    {r.details && <div className="text-xs text-muted-foreground mt-0.5">{r.details}</div>}
+                    {r.churches?.giving_url && (
+                      <a href={r.churches.giving_url} target="_blank" rel="noreferrer"
+                         className="text-xs inline-flex items-center gap-1 mt-1 underline underline-offset-2 break-all">
+                        {r.churches.giving_url} <ExternalLink className="h-3 w-3 shrink-0" />
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button size="sm" variant="outline" onClick={() => resolveReport(r, "actioned")} disabled={queueBusy === r.id}>
+                      Flag listing
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => resolveReport(r, "dismissed")} disabled={queueBusy === r.id}>
+                      Dismiss
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+
+
+      <Card>
         <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Search className="h-4 w-4" /> Discover churches in a metro</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
