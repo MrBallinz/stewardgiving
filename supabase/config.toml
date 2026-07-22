@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.account-delete]
 verify_jwt = true
+
+[functions.verify-turnstile]
+verify_jwt = true

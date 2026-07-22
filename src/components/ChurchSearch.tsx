@@ -207,23 +207,78 @@ function SubmitChurchDialog(props: {
   const [busy, setBusy] = useState(false);
   const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
   const [confirmedDuplicate, setConfirmedDuplicate] = useState(false);
+  const turnstileRef = useRef<HTMLDivElement | null>(null);
+  const widgetIdRef = useRef<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   useEffect(() => {
     if (open) {
       setName(defaultName ?? ""); setCity(""); setState(""); setWebsite("");
       setGivingUrl(""); setGivingPlatform(""); setEin(""); setNotes("");
-      setDuplicates([]); setConfirmedDuplicate(false);
+      setDuplicates([]); setConfirmedDuplicate(false); setTurnstileToken("");
     }
   }, [open, defaultName]);
+
+  // Load Cloudflare Turnstile script once, render widget when dialog is open.
+  useEffect(() => {
+    if (!open) return;
+    const SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    const ensureScript = () =>
+      new Promise<void>((resolve) => {
+        if ((window as any).turnstile) return resolve();
+        const existing = document.querySelector<HTMLScriptElement>(`script[src="${SRC}"]`);
+        if (existing) { existing.addEventListener("load", () => resolve()); return; }
+        const s = document.createElement("script");
+        s.src = SRC; s.async = true; s.defer = true;
+        s.onload = () => resolve();
+        document.head.appendChild(s);
+      });
+    let cancelled = false;
+    ensureScript().then(() => {
+      if (cancelled || !turnstileRef.current) return;
+      const ts = (window as any).turnstile;
+      if (!ts) return;
+      // Reset any prior render before mounting a fresh widget.
+      if (widgetIdRef.current) { try { ts.remove(widgetIdRef.current); } catch { /* noop */ } widgetIdRef.current = null; }
+      widgetIdRef.current = ts.render(turnstileRef.current, {
+        sitekey: "0x4AAAAAAD624Pz-LNWTcNqm",
+        action: "turnstile-spin-v2",
+        callback: (t: string) => setTurnstileToken(t),
+        "expired-callback": () => setTurnstileToken(""),
+        "error-callback": () => setTurnstileToken(""),
+      });
+    });
+    return () => {
+      cancelled = true;
+      const ts = (window as any).turnstile;
+      if (ts && widgetIdRef.current) { try { ts.remove(widgetIdRef.current); } catch { /* noop */ } widgetIdRef.current = null; }
+    };
+  }, [open]);
+
 
   const submit = async () => {
     if (!user) return;
     if (!name.trim() || !city.trim() || !state.trim()) {
       return toast({ title: "Name, city, and state are required", variant: "destructive" });
     }
+    if (!turnstileToken) {
+      return toast({ title: "Please complete the human check", variant: "destructive" });
+    }
 
     setBusy(true);
-    // Duplicate detection runs first; user must acknowledge before insert.
+    // Server-side Turnstile siteverify — gate before any DB write.
+    const { data: verify, error: verifyErr } = await supabase.functions.invoke("verify-turnstile", {
+      body: { token: turnstileToken },
+    });
+    if (verifyErr || !verify?.success) {
+      setBusy(false);
+      const ts = (window as any).turnstile;
+      if (ts && widgetIdRef.current) { try { ts.reset(widgetIdRef.current); } catch { /* noop */ } }
+      setTurnstileToken("");
+      return toast({ title: "Human check failed", description: "Please try the challenge again.", variant: "destructive" });
+    }
+
+    // Duplicate detection runs after siteverify; user must acknowledge before insert.
     if (!confirmedDuplicate) {
       const dups = await findPossibleDuplicates({
         legal_name: name, city, state, website: website || null, giving_url: givingUrl || null,
@@ -234,6 +289,7 @@ function SubmitChurchDialog(props: {
         return;
       }
     }
+
 
     const insert = {
       legal_name: name.trim(),
@@ -367,11 +423,19 @@ function SubmitChurchDialog(props: {
             <Label htmlFor="cs-notes">Notes (optional)</Label>
             <Textarea id="cs-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={300} rows={2} />
           </div>
+
+          <div className="space-y-1.5">
+            <Label>Human check</Label>
+            <div ref={turnstileRef} data-action="turnstile-spin-v2" className="cf-turnstile" />
+            <p className="text-xs text-muted-foreground">Protected by Cloudflare Turnstile.</p>
+          </div>
         </div>
+
+
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
-          <Button onClick={submit} disabled={busy}>
+          <Button onClick={submit} disabled={busy || !turnstileToken}>
             {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             {confirmedDuplicate ? "Submit anyway" : "Submit"}
           </Button>
