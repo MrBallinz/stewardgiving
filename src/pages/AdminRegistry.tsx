@@ -53,15 +53,30 @@ export default function AdminRegistry() {
   const [state, setState] = useState("");
   const [limit, setLimit] = useState(20);
   const [enrichLimit, setEnrichLimit] = useState(15);
+  const [queue, setQueue] = useState<QueueRow[]>([]);
+  const [reports, setReports] = useState<ReportRow[]>([]);
+  const [queueBusy, setQueueBusy] = useState<string | null>(null);
+  const [rejectFor, setRejectFor] = useState<QueueRow | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const appendLog = (line: string) => setLog((l) => [`${new Date().toLocaleTimeString()} · ${line}`, ...l].slice(0, 200));
 
   const refresh = async () => {
-    const [{ count: total }, { count: withSite }, { count: withGive }, { count: verified }] = await Promise.all([
+    const [{ count: total }, { count: withSite }, { count: withGive }, { count: verified }, { data: q }, { data: rep }] = await Promise.all([
       supabase.from("churches").select("*", { count: "exact", head: true }),
       supabase.from("churches").select("*", { count: "exact", head: true }).not("website", "is", null),
       supabase.from("churches").select("*", { count: "exact", head: true }).not("giving_url", "is", null),
       supabase.from("churches").select("*", { count: "exact", head: true }).eq("verification_status", "verified"),
+      supabase.from("churches")
+        .select("id, legal_name, dba_name, city, state, website, giving_url, giving_platform, listing_status, source_type, submitted_by_user_id, created_at, updated_at")
+        .in("listing_status", ["pending", "flagged"])
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase.from("church_reports")
+        .select("id, church_id, reason, details, status, created_at, churches(legal_name, dba_name, giving_url)")
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(100),
     ]);
     setCounts({
       total: total ?? 0,
@@ -69,7 +84,10 @@ export default function AdminRegistry() {
       with_giving_url: withGive ?? 0,
       verified: verified ?? 0,
     });
+    setQueue((q as QueueRow[]) ?? []);
+    setReports((rep as unknown as ReportRow[]) ?? []);
   };
+
 
   useEffect(() => { refresh(); }, []);
 
