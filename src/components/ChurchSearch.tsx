@@ -261,9 +261,24 @@ function SubmitChurchDialog(props: {
     if (!name.trim() || !city.trim() || !state.trim()) {
       return toast({ title: "Name, city, and state are required", variant: "destructive" });
     }
+    if (!turnstileToken) {
+      return toast({ title: "Please complete the human check", variant: "destructive" });
+    }
 
     setBusy(true);
-    // Duplicate detection runs first; user must acknowledge before insert.
+    // Server-side Turnstile siteverify — gate before any DB write.
+    const { data: verify, error: verifyErr } = await supabase.functions.invoke("verify-turnstile", {
+      body: { token: turnstileToken },
+    });
+    if (verifyErr || !verify?.success) {
+      setBusy(false);
+      const ts = (window as any).turnstile;
+      if (ts && widgetIdRef.current) { try { ts.reset(widgetIdRef.current); } catch { /* noop */ } }
+      setTurnstileToken("");
+      return toast({ title: "Human check failed", description: "Please try the challenge again.", variant: "destructive" });
+    }
+
+    // Duplicate detection runs after siteverify; user must acknowledge before insert.
     if (!confirmedDuplicate) {
       const dups = await findPossibleDuplicates({
         legal_name: name, city, state, website: website || null, giving_url: givingUrl || null,
@@ -274,6 +289,7 @@ function SubmitChurchDialog(props: {
         return;
       }
     }
+
 
     const insert = {
       legal_name: name.trim(),
