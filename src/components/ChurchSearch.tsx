@@ -207,14 +207,54 @@ function SubmitChurchDialog(props: {
   const [busy, setBusy] = useState(false);
   const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
   const [confirmedDuplicate, setConfirmedDuplicate] = useState(false);
+  const turnstileRef = useRef<HTMLDivElement | null>(null);
+  const widgetIdRef = useRef<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   useEffect(() => {
     if (open) {
       setName(defaultName ?? ""); setCity(""); setState(""); setWebsite("");
       setGivingUrl(""); setGivingPlatform(""); setEin(""); setNotes("");
-      setDuplicates([]); setConfirmedDuplicate(false);
+      setDuplicates([]); setConfirmedDuplicate(false); setTurnstileToken("");
     }
   }, [open, defaultName]);
+
+  // Load Cloudflare Turnstile script once, render widget when dialog is open.
+  useEffect(() => {
+    if (!open) return;
+    const SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    const ensureScript = () =>
+      new Promise<void>((resolve) => {
+        if ((window as any).turnstile) return resolve();
+        const existing = document.querySelector<HTMLScriptElement>(`script[src="${SRC}"]`);
+        if (existing) { existing.addEventListener("load", () => resolve()); return; }
+        const s = document.createElement("script");
+        s.src = SRC; s.async = true; s.defer = true;
+        s.onload = () => resolve();
+        document.head.appendChild(s);
+      });
+    let cancelled = false;
+    ensureScript().then(() => {
+      if (cancelled || !turnstileRef.current) return;
+      const ts = (window as any).turnstile;
+      if (!ts) return;
+      // Reset any prior render before mounting a fresh widget.
+      if (widgetIdRef.current) { try { ts.remove(widgetIdRef.current); } catch { /* noop */ } widgetIdRef.current = null; }
+      widgetIdRef.current = ts.render(turnstileRef.current, {
+        sitekey: "0x4AAAAAAD624Pz-LNWTcNqm",
+        action: "turnstile-spin-v2",
+        callback: (t: string) => setTurnstileToken(t),
+        "expired-callback": () => setTurnstileToken(""),
+        "error-callback": () => setTurnstileToken(""),
+      });
+    });
+    return () => {
+      cancelled = true;
+      const ts = (window as any).turnstile;
+      if (ts && widgetIdRef.current) { try { ts.remove(widgetIdRef.current); } catch { /* noop */ } widgetIdRef.current = null; }
+    };
+  }, [open]);
+
 
   const submit = async () => {
     if (!user) return;
