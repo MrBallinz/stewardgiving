@@ -33,6 +33,7 @@ export function ConnectBank({ onChange }: { onChange?: () => void }) {
   useEffect(() => { loadConnections(); }, [loadConnections]);
 
   const fetchLinkToken = useCallback(async () => {
+    if (linkToken) return; // already have one; let effect open it
     setBusy(true);
     const { data, error } = await supabase.functions.invoke("plaid-link-token", { body: {} });
     setBusy(false);
@@ -45,7 +46,7 @@ export function ConnectBank({ onChange }: { onChange?: () => void }) {
       return;
     }
     setLinkToken(data.link_token);
-  }, []);
+  }, [linkToken]);
 
   const onSuccess = useCallback(async (public_token: string, metadata: any) => {
     setBusy(true);
@@ -57,7 +58,6 @@ export function ConnectBank({ onChange }: { onChange?: () => void }) {
       toast({ title: "Couldn't save connection", description: exErr.message, variant: "destructive" });
       return;
     }
-    // Kick off initial sync
     const { error: syncErr } = await supabase.functions.invoke("plaid-sync", { body: {} });
     setBusy(false);
     if (syncErr) {
@@ -70,13 +70,44 @@ export function ConnectBank({ onChange }: { onChange?: () => void }) {
     onChange?.();
   }, [loadConnections, onChange]);
 
-  const { open, ready } = usePlaidLink({
+  const { open, ready, error: plaidError } = usePlaidLink({
     token: linkToken,
     onSuccess,
-    onExit: () => setLinkToken(null),
+    onExit: (err) => {
+      if (err) {
+        console.error("[Plaid] exit with error", err);
+        toast({
+          title: "Bank connect closed",
+          description: err.display_message || err.error_message || err.error_code || "Plaid Link was closed.",
+          variant: "destructive",
+        });
+      }
+      setLinkToken(null);
+    },
+    onEvent: (eventName, meta) => {
+      console.log("[Plaid event]", eventName, meta);
+    },
   });
 
-  useEffect(() => { if (linkToken && ready) open(); }, [linkToken, ready, open]);
+  useEffect(() => {
+    if (plaidError) {
+      console.error("[Plaid init error]", plaidError);
+      toast({
+        title: "Plaid Link failed to initialize",
+        description: plaidError.message ?? String(plaidError),
+        variant: "destructive",
+      });
+    }
+  }, [plaidError]);
+
+  useEffect(() => {
+    if (linkToken && ready) {
+      try { open(); } catch (e: any) {
+        console.error("[Plaid open error]", e);
+        toast({ title: "Couldn't open Plaid", description: e?.message ?? "Unknown error", variant: "destructive" });
+      }
+    }
+  }, [linkToken, ready, open]);
 
   const resync = async () => {
     setBusy(true);
