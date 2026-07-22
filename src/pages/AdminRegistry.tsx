@@ -126,6 +126,59 @@ export default function AdminRegistry() {
     toast({ title: "Backfill complete", description: `Ran ${TOP_METROS.length} metros.` });
   };
 
+  const approve = async (row: QueueRow) => {
+    setQueueBusy(row.id);
+    const { error } = await supabase
+      .from("churches")
+      .update({
+        listing_status: "approved",
+        approved_by_admin_id: user!.id,
+        last_verified_at: new Date().toISOString(),
+      })
+      .eq("id", row.id);
+    setQueueBusy(null);
+    if (error) return toast({ title: "Approve failed", description: error.message, variant: "destructive" });
+    appendLog(`✓ approved ${row.dba_name ?? row.legal_name}`);
+    toast({ title: "Listing approved" });
+    await refresh();
+  };
+
+  const reject = async () => {
+    if (!rejectFor) return;
+    setQueueBusy(rejectFor.id);
+    const { error } = await supabase
+      .from("churches")
+      .update({
+        listing_status: "rejected",
+        verification_notes: rejectReason || "Rejected by admin.",
+      })
+      .eq("id", rejectFor.id);
+    setQueueBusy(null);
+    if (error) return toast({ title: "Reject failed", description: error.message, variant: "destructive" });
+    appendLog(`✗ rejected ${rejectFor.dba_name ?? rejectFor.legal_name}`);
+    toast({ title: "Listing rejected" });
+    setRejectFor(null);
+    setRejectReason("");
+    await refresh();
+  };
+
+  const resolveReport = async (r: ReportRow, action: "dismissed" | "actioned") => {
+    setQueueBusy(r.id);
+    const patchReport = supabase
+      .from("church_reports")
+      .update({ status: action, reviewed_at: new Date().toISOString(), reviewed_by: user!.id })
+      .eq("id", r.id);
+    const patchChurch = action === "actioned"
+      ? supabase.from("churches").update({ listing_status: "flagged" }).eq("id", r.church_id)
+      : Promise.resolve({ error: null } as { error: null });
+    const [{ error: e1 }, { error: e2 }] = await Promise.all([patchReport, patchChurch]);
+    setQueueBusy(null);
+    if (e1 || e2) return toast({ title: "Update failed", description: (e1 ?? e2)?.message, variant: "destructive" });
+    appendLog(`report ${action}: ${r.churches?.dba_name ?? r.churches?.legal_name ?? r.church_id}`);
+    await refresh();
+  };
+
+
   const stat = (label: string, n: number | undefined) => (
     <div className="rounded-lg border border-border/60 p-3">
       <div className="text-xs text-muted-foreground">{label}</div>
