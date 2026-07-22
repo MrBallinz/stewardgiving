@@ -11,8 +11,36 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Play, Search, ShieldCheck, LogOut } from "lucide-react";
+import { Loader2, Play, Search, ShieldCheck, LogOut, Check, X, ExternalLink, Flag } from "lucide-react";
 import { TOP_METROS } from "@/lib/top-metros";
+import { Textarea } from "@/components/ui/textarea";
+
+type QueueRow = {
+  id: string;
+  legal_name: string;
+  dba_name: string | null;
+  city: string | null;
+  state: string | null;
+  website: string | null;
+  giving_url: string | null;
+  giving_platform: string | null;
+  listing_status: "pending" | "approved" | "rejected" | "flagged";
+  source_type: string;
+  submitted_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ReportRow = {
+  id: string;
+  church_id: string;
+  reason: string;
+  details: string | null;
+  status: "open" | "reviewed" | "dismissed" | "actioned";
+  created_at: string;
+  churches?: { legal_name: string; dba_name: string | null; giving_url: string | null } | null;
+};
+
 
 type Counts = { total: number; with_website: number; with_giving_url: number; verified: number };
 
