@@ -112,6 +112,97 @@ export type Database = {
           },
         ]
       }
+      church_giving_link_audit: {
+        Row: {
+          changed_by: string | null
+          changed_by_role: string | null
+          church_id: string
+          created_at: string
+          id: string
+          new_giving_platform: string | null
+          new_giving_url: string | null
+          old_giving_platform: string | null
+          old_giving_url: string | null
+          reason: string | null
+        }
+        Insert: {
+          changed_by?: string | null
+          changed_by_role?: string | null
+          church_id: string
+          created_at?: string
+          id?: string
+          new_giving_platform?: string | null
+          new_giving_url?: string | null
+          old_giving_platform?: string | null
+          old_giving_url?: string | null
+          reason?: string | null
+        }
+        Update: {
+          changed_by?: string | null
+          changed_by_role?: string | null
+          church_id?: string
+          created_at?: string
+          id?: string
+          new_giving_platform?: string | null
+          new_giving_url?: string | null
+          old_giving_platform?: string | null
+          old_giving_url?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "church_giving_link_audit_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      church_reports: {
+        Row: {
+          church_id: string
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_user_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          church_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_user_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          church_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_user_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "church_reports_church_id_fkey"
+            columns: ["church_id"]
+            isOneToOne: false
+            referencedRelation: "churches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       churches: {
         Row: {
           aliases: string[]
@@ -131,6 +222,7 @@ export type Database = {
           id: string
           last_verified_at: string | null
           legal_name: string
+          listing_status: string
           ntee_code: string | null
           org_type: string
           pastor_name: string | null
@@ -141,7 +233,9 @@ export type Database = {
           street: string | null
           submitted_by_user_id: string | null
           updated_at: string
+          verification_notes: string | null
           verification_status: string
+          verified_501c3: boolean
           website: string | null
           zip: string | null
         }
@@ -163,6 +257,7 @@ export type Database = {
           id?: string
           last_verified_at?: string | null
           legal_name: string
+          listing_status?: string
           ntee_code?: string | null
           org_type?: string
           pastor_name?: string | null
@@ -173,7 +268,9 @@ export type Database = {
           street?: string | null
           submitted_by_user_id?: string | null
           updated_at?: string
+          verification_notes?: string | null
           verification_status?: string
+          verified_501c3?: boolean
           website?: string | null
           zip?: string | null
         }
@@ -195,6 +292,7 @@ export type Database = {
           id?: string
           last_verified_at?: string | null
           legal_name?: string
+          listing_status?: string
           ntee_code?: string | null
           org_type?: string
           pastor_name?: string | null
@@ -205,7 +303,9 @@ export type Database = {
           street?: string | null
           submitted_by_user_id?: string | null
           updated_at?: string
+          verification_notes?: string | null
           verification_status?: string
+          verified_501c3?: boolean
           website?: string | null
           zip?: string | null
         }
