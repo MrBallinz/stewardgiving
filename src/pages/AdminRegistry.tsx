@@ -1,7 +1,7 @@
 // Steward — admin control room for populating the church registry.
 // Gated server-side by ADMIN_EMAILS env in the edge functions; the UI
 // simply invokes them and streams progress.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,8 +11,36 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Play, Search, ShieldCheck, LogOut } from "lucide-react";
+import { Loader2, Play, Search, ShieldCheck, LogOut, Check, X, ExternalLink, Flag } from "lucide-react";
 import { TOP_METROS } from "@/lib/top-metros";
+import { Textarea } from "@/components/ui/textarea";
+
+type QueueRow = {
+  id: string;
+  legal_name: string;
+  dba_name: string | null;
+  city: string | null;
+  state: string | null;
+  website: string | null;
+  giving_url: string | null;
+  giving_platform: string | null;
+  listing_status: "pending" | "approved" | "rejected" | "flagged";
+  source_type: string;
+  submitted_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ReportRow = {
+  id: string;
+  church_id: string;
+  reason: string;
+  details: string | null;
+  status: "open" | "reviewed" | "dismissed" | "actioned";
+  created_at: string;
+  churches?: { legal_name: string; dba_name: string | null; giving_url: string | null } | null;
+};
+
 
 type Counts = { total: number; with_website: number; with_giving_url: number; verified: number };
 
@@ -25,15 +53,30 @@ export default function AdminRegistry() {
   const [state, setState] = useState("");
   const [limit, setLimit] = useState(20);
   const [enrichLimit, setEnrichLimit] = useState(15);
+  const [queue, setQueue] = useState<QueueRow[]>([]);
+  const [reports, setReports] = useState<ReportRow[]>([]);
+  const [queueBusy, setQueueBusy] = useState<string | null>(null);
+  const [rejectFor, setRejectFor] = useState<QueueRow | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   const appendLog = (line: string) => setLog((l) => [`${new Date().toLocaleTimeString()} · ${line}`, ...l].slice(0, 200));
 
   const refresh = async () => {
-    const [{ count: total }, { count: withSite }, { count: withGive }, { count: verified }] = await Promise.all([
+    const [{ count: total }, { count: withSite }, { count: withGive }, { count: verified }, { data: q }, { data: rep }] = await Promise.all([
       supabase.from("churches").select("*", { count: "exact", head: true }),
       supabase.from("churches").select("*", { count: "exact", head: true }).not("website", "is", null),
       supabase.from("churches").select("*", { count: "exact", head: true }).not("giving_url", "is", null),
       supabase.from("churches").select("*", { count: "exact", head: true }).eq("verification_status", "verified"),
+      supabase.from("churches")
+        .select("id, legal_name, dba_name, city, state, website, giving_url, giving_platform, listing_status, source_type, submitted_by_user_id, created_at, updated_at")
+        .in("listing_status", ["pending", "flagged"])
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase.from("church_reports")
+        .select("id, church_id, reason, details, status, created_at, churches(legal_name, dba_name, giving_url)")
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(100),
     ]);
     setCounts({
       total: total ?? 0,
@@ -41,7 +84,10 @@ export default function AdminRegistry() {
       with_giving_url: withGive ?? 0,
       verified: verified ?? 0,
     });
+    setQueue((q as QueueRow[]) ?? []);
+    setReports((rep as unknown as ReportRow[]) ?? []);
   };
+
 
   useEffect(() => { refresh(); }, []);
 
@@ -79,6 +125,59 @@ export default function AdminRegistry() {
     }
     toast({ title: "Backfill complete", description: `Ran ${TOP_METROS.length} metros.` });
   };
+
+  const approve = async (row: QueueRow) => {
+    setQueueBusy(row.id);
+    const { error } = await supabase
+      .from("churches")
+      .update({
+        listing_status: "approved",
+        approved_by_admin_id: user!.id,
+        last_verified_at: new Date().toISOString(),
+      })
+      .eq("id", row.id);
+    setQueueBusy(null);
+    if (error) return toast({ title: "Approve failed", description: error.message, variant: "destructive" });
+    appendLog(`✓ approved ${row.dba_name ?? row.legal_name}`);
+    toast({ title: "Listing approved" });
+    await refresh();
+  };
+
+  const reject = async () => {
+    if (!rejectFor) return;
+    setQueueBusy(rejectFor.id);
+    const { error } = await supabase
+      .from("churches")
+      .update({
+        listing_status: "rejected",
+        verification_notes: rejectReason || "Rejected by admin.",
+      })
+      .eq("id", rejectFor.id);
+    setQueueBusy(null);
+    if (error) return toast({ title: "Reject failed", description: error.message, variant: "destructive" });
+    appendLog(`✗ rejected ${rejectFor.dba_name ?? rejectFor.legal_name}`);
+    toast({ title: "Listing rejected" });
+    setRejectFor(null);
+    setRejectReason("");
+    await refresh();
+  };
+
+  const resolveReport = async (r: ReportRow, action: "dismissed" | "actioned") => {
+    setQueueBusy(r.id);
+    const patchReport = supabase
+      .from("church_reports")
+      .update({ status: action, reviewed_at: new Date().toISOString(), reviewed_by: user!.id })
+      .eq("id", r.id);
+    const patchChurch = action === "actioned"
+      ? supabase.from("churches").update({ listing_status: "flagged" }).eq("id", r.church_id)
+      : Promise.resolve({ error: null } as { error: null });
+    const [{ error: e1 }, { error: e2 }] = await Promise.all([patchReport, patchChurch]);
+    setQueueBusy(null);
+    if (e1 || e2) return toast({ title: "Update failed", description: (e1 ?? e2)?.message, variant: "destructive" });
+    appendLog(`report ${action}: ${r.churches?.dba_name ?? r.churches?.legal_name ?? r.church_id}`);
+    await refresh();
+  };
+
 
   const stat = (label: string, n: number | undefined) => (
     <div className="rounded-lg border border-border/60 p-3">
@@ -161,6 +260,101 @@ export default function AdminRegistry() {
       </div>
 
       <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4" /> Review queue
+            <Badge variant="outline" className="ml-2">{queue.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {queue.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nothing pending. Every listing users can see has been approved.</p>
+          ) : (
+            <ul className="divide-y divide-border/60">
+              {queue.map((r) => (
+                <li key={r.id} className="py-3 flex flex-wrap items-start gap-3">
+                  <div className="flex-1 min-w-[220px]">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium">{r.dba_name ?? r.legal_name}</span>
+                      <Badge variant="outline" className="text-[10px]">{r.listing_status}</Badge>
+                      <Badge variant="secondary" className="text-[10px]">{r.source_type}</Badge>
+                      {r.giving_platform && <Badge variant="outline" className="text-[10px]">{r.giving_platform}</Badge>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {[r.city, r.state].filter(Boolean).join(", ") || "—"}
+                    </div>
+                    {r.giving_url && (
+                      <a href={r.giving_url} target="_blank" rel="noreferrer"
+                         className="text-xs inline-flex items-center gap-1 mt-1 underline underline-offset-2 break-all">
+                        {r.giving_url} <ExternalLink className="h-3 w-3 shrink-0" />
+                      </a>
+                    )}
+                    {r.website && (
+                      <a href={r.website} target="_blank" rel="noreferrer"
+                         className="block text-xs text-muted-foreground mt-0.5 underline underline-offset-2 break-all">
+                        {r.website}
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button size="sm" onClick={() => approve(r)} disabled={queueBusy === r.id}>
+                      {queueBusy === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1" />}
+                      Approve
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setRejectFor(r)} disabled={queueBusy === r.id}>
+                      <X className="h-3.5 w-3.5 mr-1" /> Reject
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Flag className="h-4 w-4" /> Open reports
+            <Badge variant="outline" className="ml-2">{reports.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {reports.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No open reports.</p>
+          ) : (
+            <ul className="divide-y divide-border/60">
+              {reports.map((r) => (
+                <li key={r.id} className="py-3 flex flex-wrap items-start gap-3">
+                  <div className="flex-1 min-w-[220px]">
+                    <div className="font-medium">{r.churches?.dba_name ?? r.churches?.legal_name ?? r.church_id}</div>
+                    <div className="text-xs mt-0.5"><span className="text-muted-foreground">Reason:</span> {r.reason}</div>
+                    {r.details && <div className="text-xs text-muted-foreground mt-0.5">{r.details}</div>}
+                    {r.churches?.giving_url && (
+                      <a href={r.churches.giving_url} target="_blank" rel="noreferrer"
+                         className="text-xs inline-flex items-center gap-1 mt-1 underline underline-offset-2 break-all">
+                        {r.churches.giving_url} <ExternalLink className="h-3 w-3 shrink-0" />
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button size="sm" variant="outline" onClick={() => resolveReport(r, "actioned")} disabled={queueBusy === r.id}>
+                      Flag listing
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => resolveReport(r, "dismissed")} disabled={queueBusy === r.id}>
+                      Dismiss
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+
+
+      <Card>
         <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Search className="h-4 w-4" /> Discover churches in a metro</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -221,8 +415,33 @@ export default function AdminRegistry() {
           )}
         </CardContent>
       </Card>
+
+      {rejectFor && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur p-4"
+             onClick={() => { setRejectFor(null); setRejectReason(""); }}>
+          <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <CardHeader>
+              <CardTitle className="text-base">Reject {rejectFor.dba_name ?? rejectFor.legal_name}?</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Label htmlFor="reject-reason">Reason (stored on the listing)</Label>
+              <Textarea id="reject-reason" value={rejectReason} maxLength={500}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        placeholder="e.g. Could not verify 501(c)(3) status; giving link redirected off-domain." />
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => { setRejectFor(null); setRejectReason(""); }}>Cancel</Button>
+                <Button variant="destructive" onClick={reject} disabled={queueBusy === rejectFor.id}>
+                  {queueBusy === rejectFor.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                  Reject listing
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
+
 }
 
 const GoogleIcon = () => (
