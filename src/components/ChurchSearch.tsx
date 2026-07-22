@@ -423,7 +423,15 @@ function SubmitChurchDialog(props: {
             <Label htmlFor="cs-notes">Notes (optional)</Label>
             <Textarea id="cs-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={300} rows={2} />
           </div>
+
+          <div className="space-y-1.5">
+            <Label>Human check</Label>
+            <div ref={turnstileRef} data-action="turnstile-spin-v2" className="cf-turnstile" />
+            <p className="text-xs text-muted-foreground">Protected by Cloudflare Turnstile.</p>
+          </div>
         </div>
+
+
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
