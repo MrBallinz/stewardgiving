@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.audit_church_giving_link_change() FROM PUBLIC, anon, authenticated;
