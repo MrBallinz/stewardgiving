@@ -326,6 +326,54 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          admin_reply: string | null
+          ai_reply: string | null
+          category: string | null
+          created_at: string
+          id: string
+          message: string
+          route: string | null
+          severity: string | null
+          status: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+          viewport: string | null
+        }
+        Insert: {
+          admin_reply?: string | null
+          ai_reply?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          route?: string | null
+          severity?: string | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+          viewport?: string | null
+        }
+        Update: {
+          admin_reply?: string | null
+          ai_reply?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          route?: string | null
+          severity?: string | null
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+          viewport?: string | null
+        }
+        Relationships: []
+      }
       giving_covenants: {
         Row: {
           auto_transfer: boolean
@@ -543,6 +591,45 @@ export type Database = {
           status?: Database["public"]["Enums"]["summary_status"]
           total_expenses?: number
           total_revenue?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          body: string | null
+          created_at: string
+          dismissed_at: string | null
+          id: string
+          kind: string
+          metadata: Json
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          body?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          kind: string
+          metadata?: Json
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          body?: string | null
+          created_at?: string
+          dismissed_at?: string | null
+          id?: string
+          kind?: string
+          metadata?: Json
+          read_at?: string | null
+          title?: string
           user_id?: string
         }
         Relationships: []
