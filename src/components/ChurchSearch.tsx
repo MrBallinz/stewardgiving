@@ -28,6 +28,7 @@ export type ChurchRow = {
   giving_url: string | null;
   verification_status: string;
   ein: string | null;
+  org_type?: string | null;
 };
 
 type Props = {
