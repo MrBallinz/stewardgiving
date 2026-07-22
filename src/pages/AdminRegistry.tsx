@@ -415,8 +415,33 @@ export default function AdminRegistry() {
           )}
         </CardContent>
       </Card>
+
+      {rejectFor && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-background/70 backdrop-blur p-4"
+             onClick={() => { setRejectFor(null); setRejectReason(""); }}>
+          <Card className="w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <CardHeader>
+              <CardTitle className="text-base">Reject {rejectFor.dba_name ?? rejectFor.legal_name}?</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Label htmlFor="reject-reason">Reason (stored on the listing)</Label>
+              <Textarea id="reject-reason" value={rejectReason} maxLength={500}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        placeholder="e.g. Could not verify 501(c)(3) status; giving link redirected off-domain." />
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => { setRejectFor(null); setRejectReason(""); }}>Cancel</Button>
+                <Button variant="destructive" onClick={reject} disabled={queueBusy === rejectFor.id}>
+                  {queueBusy === rejectFor.id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                  Reject listing
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
+
 }
 
 const GoogleIcon = () => (
