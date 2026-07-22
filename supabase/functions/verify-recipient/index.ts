@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
     if (!FIRECRAWL_API_KEY) throw new Error("FIRECRAWL_API_KEY is not configured");
 
@@ -94,10 +95,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Authenticated client (RLS-bound to caller).
+    // Authenticated client (RLS-bound to caller) for reads.
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
+    // Service-role client for writing verification fields (bypasses the
+    // "verification fields can only be set by the verification service" trigger).
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) {
@@ -220,7 +224,7 @@ Deno.serve(async (req) => {
       verification_notes: issues.length ? issues.join(" • ") : null,
     };
 
-    const { error: uErr } = await supabase
+    const { error: uErr } = await admin
       .from("giving_recipients")
       .update(update)
       .eq("id", recipient.id);
