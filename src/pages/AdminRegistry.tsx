@@ -1,7 +1,7 @@
 // Steward — admin control room for populating the church registry.
 // Gated server-side by ADMIN_EMAILS env in the edge functions; the UI
 // simply invokes them and streams progress.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/use-auth";
