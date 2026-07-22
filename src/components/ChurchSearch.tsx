@@ -124,7 +124,7 @@ export function ChurchSearch({ onSelect, onSubmitted, placeholder, autoFocus }: 
           value={query}
           onChange={(e) => { setQuery(e.target.value); setHighlight(0); }}
           onKeyDown={onKeyDown}
-          placeholder={placeholder ?? "Search by church name and city"}
+          placeholder={placeholder ?? "Search churches, missions, or nonprofits"}
           className="pl-9 h-11"
         />
         {loading && <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />}
