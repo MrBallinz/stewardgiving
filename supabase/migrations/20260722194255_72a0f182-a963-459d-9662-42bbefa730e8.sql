@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_giving_ready() FROM PUBLIC, anon, authenticated;
