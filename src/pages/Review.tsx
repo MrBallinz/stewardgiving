@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, ExternalLink, Copy, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { formatCurrency, formatPercent, monthLabel } from "@/lib/format";
 import { platformBadgeText, buildDonateUrl, type PlatformId } from "@/lib/giving-platforms";
+import { buildGivingLink, copyAmountToClipboard } from "@/lib/giving-prefill";
 
 type Summary = {
   id: string; user_id: string; month: string;
@@ -193,13 +194,23 @@ const Review = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 mt-4">
-                  {url ? (
-                    <Button asChild size="sm">
-                      <a href={url} target="_blank" rel="noopener noreferrer">
-                        Open giving page <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-                      </a>
-                    </Button>
-                  ) : (
+                  {url ? (() => {
+                    const amountCents = Math.round(Number(t.amount) * 100);
+                    const link = buildGivingLink(url, amountCents);
+                    const handleGive = async () => {
+                      if (!link.prefilled) {
+                        await copyAmountToClipboard(amountCents);
+                        toast({ title: "Amount copied", description: link.note ?? "Paste it on the giving page." });
+                      }
+                    };
+                    return (
+                      <Button asChild size="sm" onClick={handleGive}>
+                        <a href={link.url} target="_blank" rel="noopener noreferrer">
+                          {link.prefilled ? "Give this amount" : "Open giving page"} <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+                        </a>
+                      </Button>
+                    );
+                  })() : (
                     <span className="text-xs text-muted-foreground">No giving link — record manually.</span>
                   )}
                   <Button size="sm" variant="outline" onClick={() => copyDetails(r)}>

@@ -13,6 +13,7 @@ import { formatCurrency, formatPercent, monthLabel } from "@/lib/format";
 import { toast } from "@/hooks/use-toast";
 import { seedSampleData, clearSampleData } from "@/lib/seedSampleData";
 import { AddMonthDialog } from "@/components/AddMonthDialog";
+import { ConnectBank } from "@/components/ConnectBank";
 
 type Summary = {
   id: string;
@@ -138,6 +139,11 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="space-y-8">
+            <ConnectBank onChange={async () => {
+              if (!user) return;
+              const { data: sums } = await supabase.from("monthly_summaries").select("*").eq("user_id", user.id).order("month", { ascending: false });
+              setSummaries((sums as Summary[]) ?? []);
+            }} />
             {/* Empty state — no real data yet, offer sample */}
             {realSummaries.length === 0 && !showingSample && (
               <Card className="p-8 md:p-10 shadow-card border-dashed border-border bg-card text-center space-y-5">
