@@ -97,7 +97,7 @@ export function ChurchSearch({ onSelect, onSubmitted, placeholder, autoFocus }: 
       ].join(",");
       const { data, error } = await supabase
         .from("churches")
-        .select("id,legal_name,dba_name,city,state,denomination,website,giving_platform,giving_url,verification_status,ein")
+        .select("id,legal_name,dba_name,city,state,denomination,website,giving_platform,giving_url,verification_status,ein,org_type")
         .or(orClauses)
         .limit(10);
       // Drop stale responses.
