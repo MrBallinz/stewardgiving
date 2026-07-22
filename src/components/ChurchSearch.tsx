@@ -154,6 +154,11 @@ export function ChurchSearch({ onSelect, onSubmitted, placeholder, autoFocus }: 
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
+                {r.org_type && r.org_type !== "church" && (
+                  <Badge variant="secondary" className="text-[10px] capitalize">
+                    {r.org_type}
+                  </Badge>
+                )}
                 <Badge variant="outline" className="text-[10px] whitespace-nowrap">
                   {platformBadgeText(r.giving_platform)}
                 </Badge>
