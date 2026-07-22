@@ -132,6 +132,7 @@ export type Database = {
           last_verified_at: string | null
           legal_name: string
           ntee_code: string | null
+          org_type: string
           pastor_name: string | null
           phone: string | null
           source_type: string
@@ -163,6 +164,7 @@ export type Database = {
           last_verified_at?: string | null
           legal_name: string
           ntee_code?: string | null
+          org_type?: string
           pastor_name?: string | null
           phone?: string | null
           source_type?: string
@@ -194,6 +196,7 @@ export type Database = {
           last_verified_at?: string | null
           legal_name?: string
           ntee_code?: string | null
+          org_type?: string
           pastor_name?: string | null
           phone?: string | null
           source_type?: string
