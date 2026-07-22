@@ -75,8 +75,7 @@ async function recomputeMonthlySummaries(admin: any, userId: string, affectedMon
       ? existing.status
       : "pending";
 
-    await admin.from("monthly_summaries").upsert({
-      id: existing?.id,
+    const payload = {
       user_id: userId,
       month: monthStart,
       total_revenue: revenue,
@@ -87,7 +86,12 @@ async function recomputeMonthlySummaries(admin: any, userId: string, affectedMon
       status,
       is_sample: false,
       source: "plaid",
-    }, { onConflict: "user_id,month" });
+    };
+    if (existing?.id) {
+      await admin.from("monthly_summaries").update(payload).eq("id", existing.id);
+    } else {
+      await admin.from("monthly_summaries").insert(payload);
+    }
   }
 }
 
@@ -186,7 +190,6 @@ Deno.serve(async (req) => {
       .from("bank_connections")
       .select("id, user_id, plaid_access_token, sync_cursor")
       .eq("user_id", userId)
-      .eq("provider", "plaid")
       .not("plaid_access_token", "is", null);
     if (connErr) throw connErr;
 

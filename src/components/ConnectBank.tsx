@@ -24,7 +24,7 @@ export function ConnectBank({ onChange }: { onChange?: () => void }) {
     const { data } = await supabase
       .from("bank_connections")
       .select("id, institution_name, status, last_sync_at")
-      .eq("provider", "plaid")
+      .not("plaid_item_id", "is", null)
       .order("created_at", { ascending: false });
     setConnections((data as Connection[]) ?? []);
     setLoading(false);

@@ -40,12 +40,12 @@ Deno.serve(async (req) => {
 
     const row = {
       user_id: userId,
-      provider: "plaid",
       plaid_item_id: exchange.item_id,
       plaid_access_token: exchange.access_token,
-      institution_name: institution?.name ?? null,
+      institution_name: institution?.name ?? "Bank",
       institution_id: institution?.institution_id ?? null,
       status: "active",
+      is_mock: false,
     };
 
     const { data: upserted, error: upsertErr } = await admin
