@@ -26,6 +26,8 @@ import OAuthConsent from "./pages/OAuthConsent";
 import AdminRegistry from "./pages/AdminRegistry";
 import { RequireAuth } from "./components/RequireAuth";
 import { ChatWidget } from "./components/ChatWidget";
+import { FeedbackWidget } from "./components/FeedbackWidget";
+import { NotificationBanner } from "./components/NotificationBanner";
 import { CookieBanner } from "./components/CookieBanner";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <NotificationBanner />
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/faith" element={<Faith />} />
@@ -60,6 +63,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ChatWidget />
+        <FeedbackWidget />
         <CookieBanner />
       </BrowserRouter>
     </TooltipProvider>
