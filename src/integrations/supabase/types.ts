@@ -19,27 +19,42 @@ export type Database = {
           account_mask: string | null
           created_at: string
           id: string
+          institution_id: string | null
           institution_name: string
           is_mock: boolean
+          last_sync_at: string | null
+          plaid_access_token: string | null
           plaid_item_id: string | null
+          status: string
+          sync_cursor: string | null
           user_id: string
         }
         Insert: {
           account_mask?: string | null
           created_at?: string
           id?: string
+          institution_id?: string | null
           institution_name: string
           is_mock?: boolean
+          last_sync_at?: string | null
+          plaid_access_token?: string | null
           plaid_item_id?: string | null
+          status?: string
+          sync_cursor?: string | null
           user_id: string
         }
         Update: {
           account_mask?: string | null
           created_at?: string
           id?: string
+          institution_id?: string | null
           institution_name?: string
           is_mock?: boolean
+          last_sync_at?: string | null
+          plaid_access_token?: string | null
           plaid_item_id?: string | null
+          status?: string
+          sync_cursor?: string | null
           user_id?: string
         }
         Relationships: []
@@ -531,6 +546,74 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      plaid_transactions: {
+        Row: {
+          account_id: string | null
+          amount_cents: number
+          bank_connection_id: string
+          classification: string
+          created_at: string
+          excluded: boolean
+          id: string
+          iso_currency_code: string | null
+          merchant_name: string | null
+          name: string | null
+          pending: boolean
+          pf_category_detailed: string | null
+          pf_category_primary: string | null
+          plaid_transaction_id: string
+          posted_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          amount_cents: number
+          bank_connection_id: string
+          classification?: string
+          created_at?: string
+          excluded?: boolean
+          id?: string
+          iso_currency_code?: string | null
+          merchant_name?: string | null
+          name?: string | null
+          pending?: boolean
+          pf_category_detailed?: string | null
+          pf_category_primary?: string | null
+          plaid_transaction_id: string
+          posted_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          amount_cents?: number
+          bank_connection_id?: string
+          classification?: string
+          created_at?: string
+          excluded?: boolean
+          id?: string
+          iso_currency_code?: string | null
+          merchant_name?: string | null
+          name?: string | null
+          pending?: boolean
+          pf_category_detailed?: string | null
+          pf_category_primary?: string | null
+          plaid_transaction_id?: string
+          posted_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plaid_transactions_bank_connection_id_fkey"
+            columns: ["bank_connection_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
