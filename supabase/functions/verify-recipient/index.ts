@@ -224,7 +224,7 @@ Deno.serve(async (req) => {
       verification_notes: issues.length ? issues.join(" • ") : null,
     };
 
-    const { error: uErr } = await supabase
+    const { error: uErr } = await admin
       .from("giving_recipients")
       .update(update)
       .eq("id", recipient.id);
