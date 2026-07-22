@@ -435,7 +435,7 @@ function SubmitChurchDialog(props: {
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
-          <Button onClick={submit} disabled={busy}>
+          <Button onClick={submit} disabled={busy || !turnstileToken}>
             {busy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             {confirmedDuplicate ? "Submit anyway" : "Submit"}
           </Button>
