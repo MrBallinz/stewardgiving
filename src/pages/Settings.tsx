@@ -28,6 +28,11 @@ const Settings = () => {
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [businessType, setBusinessType] = useState("Service business");
+  const [displayName, setDisplayName] = useState("");
+  const [bio, setBio] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -37,17 +42,35 @@ const Settings = () => {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, business_name, business_type")
+        .select("full_name, business_name, business_type, display_name, bio, industry, is_public")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
         setFullName(data.full_name ?? "");
         setBusinessName(data.business_name ?? "");
         setBusinessType(data.business_type ?? "Service business");
+        setDisplayName((data as any).display_name ?? "");
+        setBio((data as any).bio ?? "");
+        setIndustry((data as any).industry ?? "");
+        setIsPublic(!!(data as any).is_public);
       }
       setLoading(false);
     })();
   }, [user]);
+
+  const savePrivacy = async () => {
+    if (!user) return;
+    setSavingPrivacy(true);
+    const { error } = await supabase.from("profiles").update({
+      display_name: displayName.trim() || null,
+      bio: bio.trim() || null,
+      industry: industry.trim() || null,
+      is_public: isPublic,
+    } as any).eq("id", user.id);
+    setSavingPrivacy(false);
+    if (error) return toast({ title: "Couldn't save", description: error.message, variant: "destructive" });
+    toast({ title: "Community profile saved" });
+  };
 
   const saveProfile = async () => {
     if (!user) return;
