@@ -54,10 +54,10 @@ const PLANS = [
     highlighted: true,
   },
   {
-    name: "Kingdom",
+    name: "Steward Plus",
     price: "$99",
     tag: "For multi-entity",
-    features: ["Up to 5 entities", "Unlimited recipients", "Custom giving rules", "Dedicated advisor calls", "Tax-pro export"],
+    features: ["Up to 5 entities", "Unlimited recipients", "Giving Backlog Import (past statements)", "Custom giving rules", "Dedicated advisor calls", "Tax-pro export"],
   },
 ];
 
