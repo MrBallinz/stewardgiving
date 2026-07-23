@@ -24,6 +24,8 @@ import Terms from "./pages/Terms";
 import Security from "./pages/Security";
 import OAuthConsent from "./pages/OAuthConsent";
 import AdminRegistry from "./pages/AdminRegistry";
+import Community from "./pages/Community";
+import Moderation from "./pages/Moderation";
 import { RequireAuth } from "./components/RequireAuth";
 import { ChatWidget } from "./components/ChatWidget";
 import { FeedbackWidget } from "./components/FeedbackWidget";
@@ -55,6 +57,8 @@ const App = () => (
           <Route path="/review/:summary_id" element={<RequireAuth><Review /></RequireAuth>} />
           <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
           <Route path="/admin/registry" element={<RequireAuth><AdminRegistry /></RequireAuth>} />
+          <Route path="/admin/moderation" element={<RequireAuth><Moderation /></RequireAuth>} />
+          <Route path="/community" element={<RequireAuth><Community /></RequireAuth>} />
           <Route path="/legal" element={<Legal />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
