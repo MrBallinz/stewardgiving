@@ -59,6 +59,27 @@ export type Database = {
         }
         Relationships: []
       }
+      blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       chat_rate_buckets: {
         Row: {
           hour_count: number
@@ -326,6 +347,148 @@ export type Database = {
         }
         Relationships: []
       }
+      comments: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          flag_count: number
+          id: string
+          post_id: string
+          status: Database["public"]["Enums"]["moderation_status"]
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          flag_count?: number
+          id?: string
+          post_id: string
+          status?: Database["public"]["Enums"]["moderation_status"]
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          flag_count?: number
+          id?: string
+          post_id?: string
+          status?: Database["public"]["Enums"]["moderation_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reporter_id: string
+          status: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id: string
+          target_type: Database["public"]["Enums"]["report_target"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          target_id?: string
+          target_type?: Database["public"]["Enums"]["report_target"]
+        }
+        Relationships: []
+      }
+      connections: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["connection_status"]
+          updated_at: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["connection_status"]
+          updated_at?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["connection_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          last_message_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          last_message_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_message_at?: string
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           admin_reply: string | null
@@ -547,6 +710,77 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          flagged: boolean
+          id: string
+          read_at: string | null
+          sender_id: string
+          status: Database["public"]["Enums"]["moderation_status"]
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          flagged?: boolean
+          id?: string
+          read_at?: string | null
+          sender_id: string
+          status?: Database["public"]["Enums"]["moderation_status"]
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          flagged?: boolean
+          id?: string
+          read_at?: string | null
+          sender_id?: string
+          status?: Database["public"]["Enums"]["moderation_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_actions: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       monthly_summaries: {
         Row: {
           created_at: string
@@ -591,6 +825,36 @@ export type Database = {
           status?: Database["public"]["Enums"]["summary_status"]
           total_expenses?: number
           total_revenue?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          comment_on_post: boolean
+          connection_accepted: boolean
+          connection_requests: boolean
+          giving_ready: boolean
+          new_message: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_on_post?: boolean
+          connection_accepted?: boolean
+          connection_requests?: boolean
+          giving_ready?: boolean
+          new_message?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_on_post?: boolean
+          connection_accepted?: boolean
+          connection_requests?: boolean
+          giving_ready?: boolean
+          new_message?: boolean
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -702,31 +966,88 @@ export type Database = {
           },
         ]
       }
+      posts: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          flag_count: number
+          id: string
+          image_url: string | null
+          status: Database["public"]["Enums"]["moderation_status"]
+          updated_at: string
+          visibility: Database["public"]["Enums"]["post_visibility"]
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          flag_count?: number
+          id?: string
+          image_url?: string | null
+          status?: Database["public"]["Enums"]["moderation_status"]
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["post_visibility"]
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          flag_count?: number
+          id?: string
+          image_url?: string | null
+          status?: Database["public"]["Enums"]["moderation_status"]
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["post_visibility"]
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           business_name: string | null
           business_type: string | null
+          community_suspended_at: string | null
           created_at: string
+          display_name: string | null
+          financial_suspended_at: string | null
           full_name: string | null
           id: string
+          industry: string | null
+          is_public: boolean
           onboarded: boolean
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           business_name?: string | null
           business_type?: string | null
+          community_suspended_at?: string | null
           created_at?: string
+          display_name?: string | null
+          financial_suspended_at?: string | null
           full_name?: string | null
           id: string
+          industry?: string | null
+          is_public?: boolean
           onboarded?: boolean
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           business_name?: string | null
           business_type?: string | null
+          community_suspended_at?: string | null
           created_at?: string
+          display_name?: string | null
+          financial_suspended_at?: string | null
           full_name?: string | null
           id?: string
+          industry?: string | null
+          is_public?: boolean
           onboarded?: boolean
           updated_at?: string
         }
@@ -821,16 +1142,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      are_connected: { Args: { _a: string; _b: string }; Returns: boolean }
       consume_chat_rate: {
         Args: { _hour_limit: number; _minute_limit: number; _user_id: string }
         Returns: Json
+      }
+      contains_scam_pattern: { Args: { _text: string }; Returns: boolean }
+      is_admin: { Args: { _uid: string }; Returns: boolean }
+      is_blocked: { Args: { _a: string; _b: string }; Returns: boolean }
+      is_conversation_participant: {
+        Args: { _conv: string; _uid: string }
+        Returns: boolean
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      connection_status: "pending" | "accepted" | "declined"
+      moderation_status: "visible" | "flagged" | "hidden" | "removed"
+      post_visibility: "public" | "connections"
       recipient_type: "church" | "missions" | "nonprofit" | "other"
+      report_status: "pending" | "reviewed" | "actioned" | "dismissed"
+      report_target: "post" | "comment" | "message" | "profile"
       summary_status:
         | "pending"
         | "transferred"
@@ -966,7 +1300,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      connection_status: ["pending", "accepted", "declined"],
+      moderation_status: ["visible", "flagged", "hidden", "removed"],
+      post_visibility: ["public", "connections"],
       recipient_type: ["church", "missions", "nonprofit", "other"],
+      report_status: ["pending", "reviewed", "actioned", "dismissed"],
+      report_target: ["post", "comment", "message", "profile"],
       summary_status: [
         "pending",
         "transferred",
