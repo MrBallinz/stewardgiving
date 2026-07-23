@@ -24,6 +24,8 @@ import Terms from "./pages/Terms";
 import Security from "./pages/Security";
 import OAuthConsent from "./pages/OAuthConsent";
 import AdminRegistry from "./pages/AdminRegistry";
+import Community from "./pages/Community";
+import Moderation from "./pages/Moderation";
 import { RequireAuth } from "./components/RequireAuth";
 import { ChatWidget } from "./components/ChatWidget";
 import { FeedbackWidget } from "./components/FeedbackWidget";

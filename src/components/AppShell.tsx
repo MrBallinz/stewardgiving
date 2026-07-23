@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { to: "/recipients", label: "Recipients" },
   { to: "/covenant", label: "Covenant" },
   { to: "/report", label: "Report" },
+  { to: "/community", label: "Community" },
   { to: "/admin/registry", label: "Admin" },
   { to: "/settings", label: "Settings" },
 ];
