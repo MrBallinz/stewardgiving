@@ -153,12 +153,52 @@ const Settings = () => {
                   Discover and enrich church records so users can find giving links quickly.
                 </p>
               </div>
-              <Button asChild>
-                <Link to="/admin/registry">Open admin registry</Link>
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild><Link to="/admin/registry">Open admin registry</Link></Button>
+                <Button asChild variant="outline"><Link to="/admin/moderation">Open moderation queue</Link></Button>
+              </div>
               <p className="text-xs text-muted-foreground">
-                Access is gated server-side by the ADMIN_EMAILS list. If the button above is missing or you see a forbidden error, make sure you are signed in with an authorized admin email.
+                Access is gated server-side by admin role. Sign in with an authorized admin email if these tools return a forbidden error.
               </p>
+            </Card>
+
+            {/* Community privacy */}
+            <Card id="privacy" className="p-6 shadow-card border-border/60 space-y-5">
+              <div>
+                <h2 className="font-serif text-xl font-semibold">Community profile & privacy</h2>
+                <p className="text-sm text-muted-foreground">
+                  Your community profile is private by default. Turn it on to appear in Discover.
+                  We never expose your bank status, profit numbers, or giving amounts to other users.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dn">Display name</Label>
+                <Input id="dn" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={80} placeholder="How other members see you" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ind">Industry (optional)</Label>
+                <Input id="ind" value={industry} onChange={(e) => setIndustry(e.target.value)} maxLength={80} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio / testimony (optional)</Label>
+                <textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500}
+                  rows={3} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+              </div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} className="mt-1" />
+                <span className="text-sm">
+                  <strong>Make my profile discoverable.</strong>
+                  <span className="block text-muted-foreground text-xs mt-0.5">
+                    Others can find you in Discover and send a connection request. You'll approve every request.
+                  </span>
+                </span>
+              </label>
+              <div className="flex justify-end">
+                <Button onClick={savePrivacy} disabled={savingPrivacy}>
+                  {savingPrivacy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Save community profile
+                </Button>
+              </div>
             </Card>
 
             {/* Profile */}
